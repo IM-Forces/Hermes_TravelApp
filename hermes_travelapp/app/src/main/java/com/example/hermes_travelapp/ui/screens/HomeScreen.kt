@@ -1,4 +1,4 @@
-package com.example.hermes_travelapp.screens
+package com.example.hermes_travelapp.ui.screens
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
