@@ -7,40 +7,36 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 val Typography = Typography(
-    // Títulos Principales (Dorado Atenea)
+    // Títulos Principales
     titleLarge = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Bold,
         fontSize = 28.sp,
         lineHeight = 34.sp,
-        letterSpacing = 1.sp,
-        color = DoradoAtenea
+        letterSpacing = 1.sp
     ),
-    // Subtítulos (Azul Egeo)
+    // Subtítulos
     titleMedium = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.SemiBold,
         fontSize = 20.sp,
         lineHeight = 26.sp,
-        letterSpacing = 0.5.sp,
-        color = AzulEgeo
+        letterSpacing = 0.5.sp
     ),
-    // Texto Normal / Cuerpo (Blanco Mármol)
+    // Texto Normal / Cuerpo
     bodyLarge = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
         lineHeight = 24.sp,
-        letterSpacing = 0.5.sp,
-        color = BlancoMarmol
+        letterSpacing = 0.5.sp
     ),
-    // Texto Secundario / Pequeño (Blanco Mármol con opacidad)
+    // Texto Secundario / Pequeño
     bodyMedium = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,
         fontSize = 14.sp,
         lineHeight = 20.sp,
-        letterSpacing = 0.25.sp,
-        color = BlancoMarmol.copy(alpha = 0.7f)
+        letterSpacing = 0.25.sp
     )
 )

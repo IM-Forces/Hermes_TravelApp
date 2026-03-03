@@ -29,10 +29,10 @@ private val LightColorScheme = lightColorScheme(
     secondary = AzulEgeo,
     tertiary = TerracotaSuave,
     background = BlancoMarmol,
-    surface = Color.White,
+    surface = BlancoMarmol,
     onPrimary = NegroCeramica,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
+    onSecondary = BlancoMarmol,
+    onTertiary = BlancoMarmol,
     onBackground = NegroCeramica,
     onSurface = NegroCeramica
 )

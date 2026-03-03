@@ -53,24 +53,25 @@ fun SplashScreenContent(progress: Float = 0f) {
             verticalArrangement = Arrangement.Center
         ) {
             Image(
-                painter = painterResource(id = R.drawable.hermes_no_bg),
+                painter = painterResource(id = R.drawable.logofinal),
                 contentDescription = "Logo Hermes Travel App",
                 modifier = Modifier.size(400.dp),
                 contentScale = ContentScale.Fit
             )
 
-            // Título HERMES usando el estilo del Tema (Dorado Atenea)
+            // Título HERMES - Forzamos Primary (Dorado) para identidad de marca
             Text(
                 text = "HERMES",
                 style = MaterialTheme.typography.titleLarge,
-                fontSize = 48.sp, // Sobreescribimos solo el tamaño para el Splash
+                color = MaterialTheme.colorScheme.primary,
+                fontSize = 48.sp,
                 letterSpacing = 12.sp,
                 textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Línea decorativa
+            // Línea decorativa - Usa Primary con opacidad
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.width(220.dp)
@@ -98,10 +99,11 @@ fun SplashScreenContent(progress: Float = 0f) {
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // Subtítulo TRAVEL APP usando el estilo del Tema (Blanco Mármol)
+            // Subtítulo TRAVEL APP - Dinámico según el tema (onBackground)
             Text(
                 text = "TRAVEL APP",
                 style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontSize = 13.sp,
                 letterSpacing = 6.sp,
                 textAlign = TextAlign.Center
@@ -112,6 +114,7 @@ fun SplashScreenContent(progress: Float = 0f) {
             Text(
                 text = "Starting your Journey...",
                 style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                 letterSpacing = 1.sp
             )
 
@@ -137,6 +140,7 @@ fun SplashScreenContent(progress: Float = 0f) {
         Text(
             text = "v1.0.0 - Sprint 01",
             style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
             fontSize = 12.sp,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -145,10 +149,18 @@ fun SplashScreenContent(progress: Float = 0f) {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "Splash Mode Light")
 @Composable
-fun SplashScreenPreview() {
-    Hermes_travelappTheme {
+fun SplashScreenPreviewLight() {
+    Hermes_travelappTheme(darkTheme = false) {
+        SplashScreenContent(progress = 0.5f)
+    }
+}
+
+@Preview(showBackground = true, name = "Splash Mode Dark")
+@Composable
+fun SplashScreenPreviewDark() {
+    Hermes_travelappTheme(darkTheme = true) {
         SplashScreenContent(progress = 0.5f)
     }
 }
