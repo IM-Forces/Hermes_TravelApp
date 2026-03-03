@@ -50,20 +50,13 @@ fun ProfileScreen(
                 .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Header Section with Theme-aware Gradient
-            val headerGradientColor = if (isDark) {
-                MaterialTheme.colorScheme.secondary // Azul Egeo para oscuro
-            } else {
-                MaterialTheme.colorScheme.tertiary // Terracota para claro
-            }
-
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                headerGradientColor.copy(alpha = 0.7f),
+                                MaterialTheme.colorScheme.secondary.copy(alpha = 0.7f),
                                 MaterialTheme.colorScheme.background
                             )
                         )
