@@ -1,64 +1,113 @@
-# Hemes: Travel App
+# ✈️ Hermes: Travel App
 
-## General Description
+Bienvenido a **Hermes**, tu compañero digital para planificar y disfrutar de cada viaje. 🌍🗺️ Desde escapadas de fin de semana hasta aventuras épicas, Hermes centraliza toda la información de tus viajes en una experiencia simple, intuitiva y personalizada.
 
-**Hermes** is a mobile and web application designed to help users plan, organize, and optimize their trips in a simple and intuitive way. The app allows users to create personalized itineraries, manage budgets, store reservations, and discover destination recommendations in one centralized platform.
+## 📖 Acerca del Proyecto
 
-The main goal of Hermes is to centralize all relevant travel information so users can enjoy their experience without worrying about logistics.
+Hermes nace de la necesidad de **simplificar la planificación de viajes**. Sabemos lo caótico que puede ser organizar itinerarios, gestionar presupuestos y recordar reservas. Por eso creamos una aplicación que **nosotros mismos querríamos usar**: una herramienta todo-en-uno que elimina el estrés de viajar.
 
-## Main Features
+El nombre **Hermes** está inspirado en el dios griego de los viajeros y mensajeros, simbolizando velocidad, eficiencia y conexión, valores que definen nuestra app.
 
-- Creation of personalized daily and hourly itineraries.
-- Budget management with expense tracking.
-- Reservation management (flights, hotels, transportation).
-- Interactive map with points of interest.
-- Collaborative trip planning for groups.
-- Important reminders and notifications.
-- Cloud synchronization for multi-device access.
-
-## Target Audience
-
-- Frequent travelers.
-- Backpackers and adventurers.
-- Families planning vacations.
-- Groups of friends.
-- Business travelers.
-
-## Value Proposition
-
-App offers:
-- Centralized travel information.
-- Time-saving planning tools.
-- Reduced stress before and during trips.
-- A personalized and collaborative experience.
-
-## Technologies Used
-
-- Frontend: React Native / Flutter
-- Backend: Node.js
-- Database: MongoDB / PostgreSQL
-- Cloud Services: AWS / Firebase
+Desarrollada con **Kotlin + Jetpack Compose**, Hermes ofrece una experiencia moderna, fluida y completamente nativa para Android.
 
 ---
 
-# Creators Information
+## 🚀 Características Principales
 
-## Founding Team
-
-### Ivan Gil Cañizares
-- Email: igc15@alumnes.udl.cat
-
-### Marco Beruet Morelli
-- Email: mbm68@alumnes.udl.cat
-
----
-
-## General Contact
-
-- Website: --
-- General Email: --
-- Social Media: --
+✅ **Itinerarios Personalizados** - Crea planes diarios y por horas adaptados a tus necesidades. 📅  
+✅ **Gestión de Presupuesto** - Controla tus gastos y mantén tus finanzas en orden. 💰  
+✅ **Organización de Reservas** - Almacena confirmaciones de vuelos, hoteles y transporte. 🎫  
+✅ **Mapas Interactivos** - Visualiza puntos de interés y planifica tus rutas. 🗺️  
+✅ **Planificación Colaborativa** - Viaja en grupo y coordinad juntos. 👥  
+✅ **Recordatorios Inteligentes** - Nunca olvides una reserva o actividad. ⏰  
+✅ **Sincronización en la Nube** - Accede a tus viajes desde cualquier dispositivo. ☁️  
+✅ **Soporte Multiidioma** - Disponible en varios idiomas. 🌐  
 
 ---
 
-© 2026 Hermes: Travel App. All rights reserved.
+## 🛠️ Tecnologías Utilizadas
+
+- **Kotlin** - Lenguaje principal de desarrollo para Android.
+- **Jetpack Compose** - Framework moderno para interfaces de usuario declarativas.
+- **Navigation Component** - Sistema de navegación fluido entre pantallas.
+- **Material Design 3** - Diseño visual limpio, moderno y accesible.
+- **Room Database** - Persistencia local de datos para modo offline.
+- **Firebase** - Backend para autenticación y sincronización en la nube.
+- **Google Maps SDK** - Integración de mapas interactivos.
+
+### 📱 Compatibilidad
+- **Android Oreo (API 26+)**  
+  📌 **Justificación**: Android Oreo representa un punto de equilibrio perfecto entre compatibilidad amplia (cubre más del 90% de dispositivos activos) y acceso a funcionalidades modernas de Android, sin sacrificar rendimiento ni seguridad.
+
+---
+
+## 👥 Equipo de Desarrollo
+
+### Founding Team
+
+**Ivan Gil Cañizares**  
+- Email: igc15@alumnes.udl.cat  
+- Rol: Desarrollo Android, Arquitectura del Sistema
+
+**Marco Beruet Morelli**  
+- Email: mbm68@alumnes.udl.cat  
+- Rol: Desarrollo Android, Diseño de UI/UX
+
+---
+
+## 🎯 Propuesta de Valor
+
+Hermes ofrece:
+- ✨ **Centralización de información** - Todo tu viaje en un solo lugar.
+- ⏱️ **Ahorro de tiempo** - Planifica más rápido y de forma más eficiente.
+- 😌 **Reducción del estrés** - Viaja con confianza sabiendo que todo está organizado.
+- 🤝 **Experiencia colaborativa** - Perfecta para grupos y familias.
+
+---
+
+## 🎨 Filosofía de Diseño
+
+Hermes sigue los principios de **Material Design 3**, priorizando:
+- Interfaz clara y minimalista
+- Navegación intuitiva
+- Accesibilidad para todos los usuarios
+- Coherencia visual en toda la aplicación
+
+---
+
+## 📂 Estructura del Proyecto
+
+```
+hermes_travelapp/
+├── ui/
+│   ├── screens/       # Pantallas de la aplicación
+│   └── theme/         # Tema y estilos
+├── domain/            # Lógica de negocio y modelos
+└── data/              # Repositorios y fuentes de datos
+```
+
+---
+
+## 📄 Licencia
+
+Este proyecto está licenciado bajo **Apache License 2.0**.  
+Consulta el archivo [LICENSE](LICENSE) para más detalles.
+
+---
+
+## 🤝 Contribuciones
+
+¿Quieres contribuir al proyecto? Revisa nuestras [guías de contribución](CONTRIBUTING.md) para conocer nuestro flujo de trabajo y estándares de código.
+
+---
+
+## 📞 Contacto
+
+Para más información sobre el proyecto:
+- **Repositorio GitHub**: [Hermes Travel App](https://github.com/IvanGilC/Hemes_TravelApp)
+- **Universidad**: Universitat de Lleida (Campus Igualada)
+- **Curso**: Aplicaciones para Dispositivos Móviles (105025-2526)
+
+---
+
+© 2025 Hermes Travel App. Todos los derechos reservados.
