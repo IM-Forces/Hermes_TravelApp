@@ -20,20 +20,27 @@ Desarrollada con **Kotlin + Jetpack Compose**, Hermes ofrece una experiencia mod
 ✅ **Mapas Interactivos** - Visualiza puntos de interés y planifica tus rutas. 🗺️  
 ✅ **Planificación Colaborativa** - Viaja en grupo y coordinad juntos. 👥  
 ✅ **Recordatorios Inteligentes** - Nunca olvides una reserva o actividad. ⏰  
-✅ **Sincronización en la Nube** - Accede a tus viajes desde cualquier dispositivo. ☁️  
+✅ **Sincronización de Datos** - Accede a tus viajes de forma segura. ☁️  
 ✅ **Soporte Multiidioma** - Disponible en varios idiomas. 🌐  
 
 ---
 
 ## 🛠️ Tecnologías Utilizadas
 
+### Actuales (Sprint 01)
 - **Kotlin** - Lenguaje principal de desarrollo para Android.
 - **Jetpack Compose** - Framework moderno para interfaces de usuario declarativas.
 - **Navigation Component** - Sistema de navegación fluido entre pantallas.
 - **Material Design 3** - Diseño visual limpio, moderno y accesible.
-- **Room Database** - Persistencia local de datos para modo offline.
-- **Firebase** - Backend para autenticación y sincronización en la nube.
-- **Google Maps SDK** - Integración de mapas interactivos.
+
+### Planeadas (Futuros Sprints)
+- **Base de datos local** - Persistencia de datos para modo offline.
+- **Sistema de autenticación** - Gestión de usuarios y sesiones.
+- **APIs externas** - Integración con servicios de terceros.
+- **Sistema de mapas** - Visualización interactiva de ubicaciones.
+- **Gestión de imágenes** - Captura y almacenamiento de fotos.
+
+*Las tecnologías específicas se seleccionarán según las necesidades de cada sprint.*
 
 ### 📱 Compatibilidad
 - **Android Oreo (API 26+)**  
