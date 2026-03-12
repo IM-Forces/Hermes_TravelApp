@@ -24,7 +24,7 @@ import com.example.hermes_travelapp.ui.theme.Hermes_travelappTheme
 @Composable
 fun CreateTripScreen(onBack: () -> Unit = {}, onCreateTrip: () -> Unit = {}) {
     var tripName by remember { mutableStateOf("") }
-    var destination by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
     var budget by remember { mutableStateOf("") }
     var startDate by remember { mutableStateOf("") }
     var endDate by remember { mutableStateOf("") }
@@ -68,14 +68,6 @@ fun CreateTripScreen(onBack: () -> Unit = {}, onCreateTrip: () -> Unit = {}) {
                 singleLine = true
             )
 
-            OutlinedTextField(
-                value = destination,
-                onValueChange = { destination = it },
-                label = { Text("Destino") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-
             // Fechas
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -103,6 +95,14 @@ fun CreateTripScreen(onBack: () -> Unit = {}, onCreateTrip: () -> Unit = {}) {
                 label = { Text("Presupuesto inicial (€)") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
+            )
+
+            OutlinedTextField(
+                value = description,
+                onValueChange = { description = it },
+                label = { Text("Descripción") },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 3
             )
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))

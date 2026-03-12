@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.*
@@ -25,6 +26,7 @@ import com.example.hermes_travelapp.ui.theme.*
 
 // Modelo de datos para los viajes (si no está ya definido globalmente)
 data class TripInTrips(
+    val id: Int,
     val name: String,
     val emoji: String,
     val startDate: String,
@@ -35,17 +37,43 @@ data class TripInTrips(
 
 // Datos de ejemplo para TripsScreen
 val mockTripsInTrips = listOf(
-    TripInTrips("Grecia Clásica", "🏛️", "15 Jun", "22 Jun", 1200, 0.75f),
-    TripInTrips("Safari en Kenia", "🦁", "10 Ago", "20 Ago", 2500, 0.40f),
-    TripInTrips("Tokio Moderno", "⛩️", "05 Oct", "15 Oct", 3000, 0.15f)
+    TripInTrips(1, "Grecia Clásica", "🏛️", "15 Jun", "22 Jun", 1200, 0.75f),
+    TripInTrips(2, "Safari en Kenia", "🦁", "10 Ago", "20 Ago", 2500, 0.40f),
+    TripInTrips(3, "Tokio Moderno", "⛩️", "05 Oct", "15 Oct", 3000, 0.15f)
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripsScreen(
     onTripClick: () -> Unit = {},
-    onCreateTripClick: () -> Unit = {} // Parámetro añadido para corregir el error
+    onCreateTripClick: () -> Unit = {},
+    onDeleteTripClick: (Int) -> Unit = {}
 ) {
+    var tripToDelete by remember { mutableStateOf<TripInTrips?>(null) }
+
+    if (tripToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { tripToDelete = null },
+            title = { Text(text = "Eliminar viaje") },
+            text = { Text(text = "¿Estás seguro de que quieres eliminar el viaje a '${tripToDelete?.name}'? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        tripToDelete?.let { onDeleteTripClick(it.id) }
+                        tripToDelete = null
+                    }
+                ) {
+                    Text(text = "Eliminar", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { tripToDelete = null }) {
+                    Text(text = "Cancelar")
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = { TripsTopBar() },
         floatingActionButton = {
@@ -86,7 +114,11 @@ fun TripsScreen(
             }
             
             items(mockTripsInTrips) { trip ->
-                TripCardInTrips(trip = trip, onClick = onTripClick)
+                TripCardInTrips(
+                    trip = trip,
+                    onClick = onTripClick,
+                    onDelete = { tripToDelete = trip }
+                )
             }
             
             item { Spacer(modifier = Modifier.height(16.dp)) }
@@ -95,7 +127,7 @@ fun TripsScreen(
 }
 
 @Composable
-fun TripCardInTrips(trip: TripInTrips, onClick: () -> Unit) {
+fun TripCardInTrips(trip: TripInTrips, onClick: () -> Unit, onDelete: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -125,7 +157,7 @@ fun TripCardInTrips(trip: TripInTrips, onClick: () -> Unit) {
                     Text(text = trip.emoji, fontSize = 28.sp)
                 }
                 
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = trip.name,
                         style = MaterialTheme.typography.titleMedium,
@@ -136,6 +168,14 @@ fun TripCardInTrips(trip: TripInTrips, onClick: () -> Unit) {
                         text = "📅 ${trip.startDate} – ${trip.endDate}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.6f)
+                    )
+                }
+
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete Trip",
+                        tint = MaterialTheme.colorScheme.error
                     )
                 }
             }

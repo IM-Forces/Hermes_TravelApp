@@ -8,7 +8,7 @@ data class Trip(
     val id: String,
     val name: String,
     val emoji: String,
-    val destination: String,
+    val description: String,
     val startDate: String,
     val endDate: String,
     val budget: Int,
@@ -53,6 +53,6 @@ data class Trip(
      */
     fun getSummary(): String {
         // @TODO Implement formatting for trip summary (e.g., "Paris - 4 nights")
-        return "$name to $destination"
+        return "$name to $description"
     }
 }
