@@ -42,26 +42,33 @@ fun loadRecommendationsFromAssets(context: Context): List<RecommendationItem> {
     val items = mutableListOf<RecommendationItem>()
     try {
         val inputStream: InputStream = context.assets.open("exemplos.json")
-        val size = inputStream.available()
-        val buffer = ByteArray(size)
-        inputStream.read(buffer)
-        inputStream.close()
-        val jsonString = String(buffer, Charsets.UTF_8)
+        val jsonString = inputStream.bufferedReader().use { it.readText() }
         val jsonArray = JSONArray(jsonString)
         for (i in 0 until jsonArray.length()) {
             val obj = jsonArray.getJSONObject(i)
+            
+            // Manejamos la inconsistencia de nombres de campo en el JSON
+            val precio = if (obj.has("precio_estimado_usd")) {
+                obj.getInt("precio_estimado_usd")
+            } else if (obj.has("precio_estimated_usd")) {
+                obj.getInt("precio_estimated_usd")
+            } else {
+                0
+            }
+
             items.add(
                 RecommendationItem(
-                    lugar = obj.getString("lugar"),
-                    tipo = obj.getString("tipo"),
-                    pais = obj.getString("pais"),
-                    ciudadRegion = obj.getString("ciudad_region"),
-                    precio = obj.optInt("precio_estimado_usd", 0),
-                    descripcion = obj.getString("descripcion")
+                    lugar = obj.optString("lugar", "Lugar desconocido"),
+                    tipo = obj.optString("tipo", "General"),
+                    pais = obj.optString("pais", ""),
+                    ciudadRegion = obj.optString("ciudad_region", ""),
+                    precio = precio,
+                    descripcion = obj.optString("descripcion", "")
                 )
             )
         }
     } catch (e: Exception) {
+        println("ERROR CARGANDO ASSETS: ${e.message}")
         e.printStackTrace()
     }
     return items
@@ -100,7 +107,11 @@ fun HomeScreen(
             if (recommendations.isEmpty()) {
                 item {
                     Box(modifier = Modifier.fillParentMaxHeight(0.7f), contentAlignment = Alignment.Center) {
-                        Text("No se pudieron cargar las recomendaciones.")
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CircularProgressIndicator()
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text("Cargando destinos...")
+                        }
                     }
                 }
             } else {
@@ -189,9 +200,8 @@ fun RecommendationCard(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                // Precio sustituyendo a la descripción
                 Text(
-                    text = if (item.precio > 0) "${item.precio}€" else "Gratis",
+                    text = if (item.precio > 0) "$${item.precio}" else "Gratis",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
