@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -66,6 +67,11 @@ fun TripsScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Mis Viajes", fontWeight = FontWeight.Bold) },
+                actions = {
+                    IconButton(onClick = { /* TODO */ }) {
+                        Icon(Icons.Default.Notifications, contentDescription = "Notificaciones")
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.secondary,
                     titleContentColor = MaterialTheme.colorScheme.primary
@@ -116,7 +122,7 @@ fun TripsScreen(
 @Composable
 fun TripCard(trip: Trip, onClick: () -> Unit, onEdit: () -> Unit, onDelete: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().height(180.dp), // Aumentado para la barra
+        modifier = Modifier.fillMaxWidth().height(180.dp),
         onClick = onClick,
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -176,7 +182,7 @@ fun TripCard(trip: Trip, onClick: () -> Unit, onEdit: () -> Unit, onDelete: () -
             Text(
                 text = trip.description,
                 style = MaterialTheme.typography.bodySmall,
-                maxLines = 1, // Reducido para dejar espacio a la barra
+                maxLines = 1,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
         }

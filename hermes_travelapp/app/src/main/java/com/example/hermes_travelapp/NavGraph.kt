@@ -85,7 +85,7 @@ fun NavGraph(modifier: Modifier = Modifier) {
                 },
                 onTripClick = { trip ->
                     selectedTrip = trip
-                    navController.navigate("tripDetail")
+                    navController.navigate("tripOverview/${trip.id}")
                 },
                 favoritePlaces = favoritePlaces,
                 onToggleFavorite = { item ->
@@ -98,10 +98,26 @@ fun NavGraph(modifier: Modifier = Modifier) {
             ) 
         }
 
-        composable("tripDetail") {
-            TripDetailScreen(
-                trip = selectedTrip,
+        // Nueva Pantalla de Resumen del Viaje (Timeline Vertical)
+        composable("tripOverview/{tripId}") { backStackEntry ->
+            val tripId = backStackEntry.arguments?.getString("tripId") ?: "1"
+            TripOverviewScreen(
+                tripId = tripId,
+                onDayClick = { dayId -> 
+                    navController.navigate("dayItinerary/$tripId/$dayId") 
+                },
                 onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable("dayItinerary/{tripId}/{dayId}") { backStackEntry ->
+            val tripId = backStackEntry.arguments?.getString("tripId") ?: "1"
+            val dayId = backStackEntry.arguments?.getString("dayId") ?: "1"
+            DayItineraryScreen(
+                tripId = tripId,
+                dayId = dayId,
+                onBack = { navController.popBackStack() },
+                onNavigateToEditActivity = { activityId -> /* TODO */ }
             )
         }
 
