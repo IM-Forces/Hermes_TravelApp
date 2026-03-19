@@ -13,7 +13,6 @@ object FakeTripDataSource {
     
     // Using mutableStateListOf to ensure Compose observers are notified of changes
     private val _trips = mutableStateListOf<Trip>()
-    val trips: List<Trip> get() = _trips
 
     init {
         // Pre-load sample data
@@ -79,11 +78,7 @@ object FakeTripDataSource {
      * Deletes a trip from the list by ID.
      */
     fun deleteTrip(tripId: String) {
-        val removed = _trips.removeIf { it.id == tripId }
-        if (removed) {
-            Log.d(TAG, "Deleted trip with ID: $tripId")
-        } else {
-            Log.w(TAG, "Delete failed: Trip with ID $tripId not found.")
-        }
+        _trips.removeIf { it.id == tripId }
+        Log.d(TAG, "Deleted trip with ID: $tripId")
     }
 }

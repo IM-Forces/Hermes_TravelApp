@@ -1,28 +1,24 @@
 package com.example.hermes_travelapp.ui.screens
 
 import android.content.res.Configuration
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.hermes_travelapp.domain.Trip
 import com.example.hermes_travelapp.ui.theme.Hermes_travelappTheme
+import com.example.hermes_travelapp.ui.viewmodels.TripViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -30,6 +26,7 @@ import java.util.*
 @Composable
 fun CreateTripScreen(
     tripToEdit: Trip? = null,
+    tripViewModel: TripViewModel? = null,
     onBack: () -> Unit = {},
     onSaveTrip: (Trip) -> Unit = {}
 ) {
@@ -38,12 +35,27 @@ fun CreateTripScreen(
     var endDate by remember { mutableStateOf(tripToEdit?.endDate ?: "") }
     var budget by remember { mutableStateOf(tripToEdit?.budget?.toString() ?: "") }
     var description by remember { mutableStateOf(tripToEdit?.description ?: "") }
-    
-    var activityInput by remember { mutableStateOf("") }
-    val itineraryItems = remember { mutableStateListOf<String>() }
 
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
+
+    // Observamos el mensaje de error del ViewModel
+    val errorMessageState = tripViewModel?.errorMessage?.observeAsState()
+    val errorMessage = errorMessageState?.value
+
+    // Pop-up de error (AlertDialog)
+    if (errorMessage != null) {
+        AlertDialog(
+            onDismissRequest = { tripViewModel?.clearError() },
+            confirmButton = {
+                TextButton(onClick = { tripViewModel?.clearError() }) {
+                    Text("Aceptar")
+                }
+            },
+            title = { Text("Error de Validación", fontWeight = FontWeight.Bold) },
+            text = { Text(errorMessage) }
+        )
+    }
 
     if (showStartDatePicker) {
         DatePickerDialogWrapper(
@@ -98,7 +110,7 @@ fun CreateTripScreen(
             OutlinedTextField(
                 value = startDate,
                 onValueChange = { },
-                label = { Text("Inicio (DD/MM/YYYY)") },
+                label = { Text("Inicio (DD/MM/YYYY) *") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { showStartDatePicker = true },
@@ -118,7 +130,7 @@ fun CreateTripScreen(
             OutlinedTextField(
                 value = endDate,
                 onValueChange = { },
-                label = { Text("Fin (DD/MM/YYYY)") },
+                label = { Text("Fin (DD/MM/YYYY) *") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { showEndDatePicker = true },
@@ -149,65 +161,6 @@ fun CreateTripScreen(
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3
             )
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-            Text(
-                text = "Planificar Itinerario",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.Start)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedTextField(
-                    value = activityInput,
-                    onValueChange = { activityInput = it },
-                    label = { Text("Nueva actividad") },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true
-                )
-                IconButton(
-                    onClick = {
-                        if (activityInput.isNotBlank()) {
-                            itineraryItems.add(activityInput)
-                            activityInput = ""
-                        }
-                    },
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.primary, CircleShape)
-                        .size(48.dp)
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Añadir", tint = MaterialTheme.colorScheme.onPrimary)
-                }
-            }
-
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                itineraryItems.forEachIndexed { index, item ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(12.dp).fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(text = item, style = MaterialTheme.typography.bodyMedium)
-                            IconButton(onClick = { itineraryItems.removeAt(index) }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
-                            }
-                        }
-                    }
-                }
-            }
 
             Spacer(modifier = Modifier.weight(1f))
 

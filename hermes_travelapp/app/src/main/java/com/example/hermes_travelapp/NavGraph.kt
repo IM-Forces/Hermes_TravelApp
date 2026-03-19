@@ -85,7 +85,7 @@ fun NavGraph(modifier: Modifier = Modifier) {
                 },
                 onTripClick = { trip ->
                     selectedTrip = trip
-                    navController.navigate("tripOverview/${trip.id}")
+                    navController.navigate("tripOverview/\${trip.id}")
                 },
                 favoritePlaces = favoritePlaces,
                 onToggleFavorite = { item ->
@@ -104,7 +104,7 @@ fun NavGraph(modifier: Modifier = Modifier) {
             TripOverviewScreen(
                 tripId = tripId,
                 onDayClick = { dayId -> 
-                    navController.navigate("dayItinerary/$tripId/$dayId") 
+                    navController.navigate("dayItinerary/\$tripId/\$dayId") 
                 },
                 onBack = { navController.popBackStack() }
             )
@@ -124,18 +124,22 @@ fun NavGraph(modifier: Modifier = Modifier) {
         composable("createTrip") {
             CreateTripScreen(
                 tripToEdit = tripToEdit,
+                tripViewModel = tripViewModel,
                 onBack = { 
                     tripToEdit = null
+                    tripViewModel.clearError()
                     navController.popBackStack() 
                 },
                 onSaveTrip = { trip ->
-                    if (tripToEdit == null) {
+                    val success = if (tripToEdit == null) {
                         tripViewModel.addTrip(trip)
                     } else {
                         tripViewModel.editTrip(trip)
                     }
-                    tripToEdit = null
-                    navController.popBackStack()
+                    if (success) {
+                        tripToEdit = null
+                        navController.popBackStack()
+                    }
                 }
             )
         }
