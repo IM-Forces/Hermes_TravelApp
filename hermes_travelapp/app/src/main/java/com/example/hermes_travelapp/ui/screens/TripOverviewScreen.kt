@@ -35,9 +35,6 @@ import com.example.hermes_travelapp.ui.viewmodels.TripViewModel
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-/**
- * UI representation of a trip day for the overview timeline.
- */
 data class TripDayUI(
     val id: String,
     val date: String,
@@ -56,10 +53,9 @@ fun TripOverviewScreen(
     onDayClick: (dayId: String) -> Unit = {},
     onBack: () -> Unit = {}
 ) {
-    // Find the trip data
-    val trip = tripViewModel.trips.find { it.id == tripId }
+    val allTrips by tripViewModel.trips.collectAsState()
+    val trip = allTrips.find { it.id == tripId }
     
-    // Load real days from ViewModel
     val realDays by tripDayViewModel.tripDays.collectAsState()
     
     LaunchedEffect(tripId) {
@@ -68,12 +64,11 @@ fun TripOverviewScreen(
 
     if (trip == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Viaje no encontrado", style = MaterialTheme.typography.headlineMedium)
+            Text("Viaje no encontrado")
         }
         return
     }
 
-    // Map domain TripDay to TripDayUI
     val dateFormatter = DateTimeFormatter.ofPattern("dd MMM", Locale("es", "ES"))
     val dayOfWeekFormatter = DateTimeFormatter.ofPattern("EEE", Locale("es", "ES"))
 
@@ -84,7 +79,7 @@ fun TripOverviewScreen(
             dayOfWeek = domainDay.date.format(dayOfWeekFormatter).replaceFirstChar { it.uppercase() },
             dayNumber = domainDay.dayNumber,
             location = domainDay.subtitle.ifBlank { "Sin descripción" },
-            activitiesCount = 0 // Future: get from ActivityViewModel if needed
+            activitiesCount = 0
         )
     }
 
@@ -96,25 +91,22 @@ fun TripOverviewScreen(
                 .fillMaxSize()
                 .padding(bottom = paddingValues.calculateBottomPadding())
         ) {
-            // 1. Header Section
             item {
                 TripOverviewHeader(
                     tripName = "${trip.emoji} ${trip.title}",
                     dates = "${trip.startDate} - ${trip.endDate}",
-                    duration = "", // Could be calculated if needed
+                    duration = "",
                     daysRemaining = trip.daysRemaining,
                     onBack = onBack
                 )
             }
 
-            // 2. Budget Overview Card
             item {
                 Box(modifier = Modifier.padding(16.dp)) {
                     BudgetOverviewCard(spent = trip.spent, total = trip.budget)
                 }
             }
 
-            // 3. Timeline Section Title
             item {
                 Text(
                     text = "📅 Itinerario del viaje",
@@ -125,11 +117,10 @@ fun TripOverviewScreen(
                 )
             }
 
-            // 4. Vertical Timeline with Real Days
             if (uiDays.isEmpty()) {
                 item {
                     Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                        Text("No hay días generados para este viaje.", color = Color.Gray)
+                        Text("No hay días generados.", color = Color.Gray)
                     }
                 }
             } else {
@@ -143,20 +134,16 @@ fun TripOverviewScreen(
                 }
             }
 
-            // 5. Add Day Button
             item {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
+                    modifier = Modifier.fillMaxWidth().padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     OutlinedButton(
-                        onClick = { /* Add day logic */ },
+                        onClick = { },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-                        contentPadding = PaddingValues(12.dp)
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
@@ -170,84 +157,20 @@ fun TripOverviewScreen(
 }
 
 @Composable
-fun TripOverviewHeader(
-    tripName: String,
-    dates: String,
-    duration: String,
-    daysRemaining: Int,
-    onBack: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(280.dp)
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Icon(
-            imageVector = Icons.Default.Image,
-            contentDescription = null,
-            modifier = Modifier
-                .size(64.dp)
-                .align(Alignment.Center),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
-        )
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f))
-                    )
-                )
-        )
-
-        IconButton(
-            onClick = onBack,
-            modifier = Modifier
-                .statusBarsPadding()
-                .padding(8.dp)
-                .align(Alignment.TopStart)
-                .background(Color.Black.copy(alpha = 0.3f), CircleShape)
-        ) {
+fun TripOverviewHeader(tripName: String, dates: String, duration: String, daysRemaining: Int, onBack: () -> Unit) {
+    Box(modifier = Modifier.fillMaxWidth().height(280.dp).background(MaterialTheme.colorScheme.surfaceVariant)) {
+        Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f)))))
+        IconButton(onClick = onBack, modifier = Modifier.statusBarsPadding().padding(8.dp).align(Alignment.TopStart).background(Color.Black.copy(alpha = 0.3f), CircleShape)) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = BlancoMarmol)
         }
-
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(16.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = tripName,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = BlancoMarmol,
-                    fontWeight = FontWeight.Bold
-                )
-                
-                Surface(
-                    color = DoradoAtenea,
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        text = "Faltan $daysRemaining días",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = Color.Black,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
+        Column(modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(text = tripName, style = MaterialTheme.typography.headlineMedium, color = BlancoMarmol, fontWeight = FontWeight.Bold)
+                Surface(color = DoradoAtenea, shape = RoundedCornerShape(8.dp)) {
+                    Text(text = "Faltan $daysRemaining días", style = MaterialTheme.typography.labelMedium, color = Color.Black, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
                 }
             }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "📅 $dates" + (if (duration.isNotBlank()) " • $duration" else ""),
-                style = MaterialTheme.typography.bodyLarge,
-                color = BlancoMarmol.copy(alpha = 0.8f)
-            )
+            Text(text = "📅 $dates" + (if (duration.isNotBlank()) " • $duration" else ""), style = MaterialTheme.typography.bodyLarge, color = BlancoMarmol.copy(alpha = 0.8f))
         }
     }
 }
@@ -255,147 +178,41 @@ fun TripOverviewHeader(
 @Composable
 fun BudgetOverviewCard(spent: Int, total: Int) {
     val progress = if (total > 0) spent.toFloat() / total.toFloat() else 0f
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
+    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
         Column(modifier = Modifier.padding(20.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Presupuesto",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "€$spent / €$total",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.primary
-                )
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text(text = "Presupuesto", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(text = "€$spent / €$total", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
             }
             Spacer(modifier = Modifier.height(12.dp))
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(10.dp)
-                    .clip(CircleShape),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-            )
+            LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth().height(10.dp).clip(CircleShape), color = MaterialTheme.colorScheme.primary, trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
             Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "${(progress * 100).toInt()}% del presupuesto total",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
+            Text(text = "${(progress * 100).toInt()}% del presupuesto total", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
         }
     }
 }
 
 @Composable
-fun TimelineDayItem(
-    day: TripDayUI,
-    isFirst: Boolean,
-    isLast: Boolean,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.Top
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.width(40.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .width(2.dp)
-                    .height(24.dp)
-                    .background(if (isFirst) Color.Transparent else MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
-            )
-            Box(
-                modifier = Modifier
-                    .size(16.dp)
-                    .background(MaterialTheme.colorScheme.primary, CircleShape)
-                    .border(4.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), CircleShape)
-            )
-            Box(
-                modifier = Modifier
-                    .width(2.dp)
-                    .weight(1f, fill = false)
-                    .height(80.dp)
-                    .background(if (isLast) Color.Transparent else MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
-            )
+fun TimelineDayItem(day: TripDayUI, isFirst: Boolean, isLast: Boolean, onClick: () -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.Top) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(40.dp)) {
+            Box(modifier = Modifier.width(2.dp).height(24.dp).background(if (isFirst) Color.Transparent else MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)))
+            Box(modifier = Modifier.size(16.dp).background(MaterialTheme.colorScheme.primary, CircleShape).border(4.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), CircleShape))
+            Box(modifier = Modifier.width(2.dp).weight(1f, fill = false).height(80.dp).background(if (isLast) Color.Transparent else MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)))
         }
-
         Spacer(modifier = Modifier.width(12.dp))
-
-        Card(
-            modifier = Modifier
-                .weight(1f)
-                .padding(vertical = 8.dp)
-                .clickable { onClick() },
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
-            border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
-        ) {
-            Row(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+        Card(modifier = Modifier.weight(1f).padding(vertical = 8.dp).clickable { onClick() }, shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)), border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))) {
+            Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "Día ${day.dayNumber}",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        Text(text = "Día ${day.dayNumber}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "${day.dayOfWeek}, ${day.date}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
+                        Text(text = "${day.dayOfWeek}, ${day.date}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                     }
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = day.location,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.EventNote,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp),
-                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "${day.activitiesCount} actividades",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
-                    }
+                    Text(text = day.location, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
                 }
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = "Ver detalle",
-                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                )
+                Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Ver detalle", tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
             }
         }
     }

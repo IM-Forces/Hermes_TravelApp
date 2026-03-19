@@ -42,7 +42,6 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: 
 fun NavGraph(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     
-    // Inyección manual simple con persistencia durante recomposiciones
     val tripRepository = remember { TripRepositoryImpl() }
     val tripDayRepository = remember { TripDayRepositoryImpl() }
     
@@ -108,12 +107,11 @@ fun NavGraph(modifier: Modifier = Modifier) {
             ) 
         }
 
-        // Nueva Pantalla de Resumen del Viaje (Timeline Vertical)
         composable("tripOverview/{tripId}") { backStackEntry ->
             val tripId = backStackEntry.arguments?.getString("tripId") ?: "1"
             TripOverviewScreen(
                 tripId = tripId,
-                tripViewModel = tripViewModel, // Faltaba pasar este VM
+                tripViewModel = tripViewModel,
                 tripDayViewModel = tripDayViewModel,
                 onDayClick = { dayId -> 
                     navController.navigate("dayItinerary/$tripId/$dayId")
@@ -128,7 +126,7 @@ fun NavGraph(modifier: Modifier = Modifier) {
             DayItineraryScreen(
                 tripId = tripId,
                 dayId = dayId,
-                tripViewModel = tripViewModel, // Añadido para mostrar el título
+                tripViewModel = tripViewModel,
                 tripDayViewModel = tripDayViewModel,
                 onBack = { navController.popBackStack() },
                 onNavigateToEditActivity = { activityId -> /* TODO */ }
@@ -196,6 +194,9 @@ fun MainScreen(
         BottomNavItem.Favorites,
         BottomNavItem.Profile
     )
+    
+    val trips by tripViewModel.trips.collectAsState()
+
     Scaffold(
         bottomBar = {
             NavigationBar(
@@ -237,7 +238,7 @@ fun MainScreen(
             composable(BottomNavItem.Explore.route) { ExploreScreen() }
             composable(BottomNavItem.Trips.route) { 
                 TripsScreen(
-                    trips = tripViewModel.trips,
+                    trips = trips,
                     onTripClick = onTripClick,
                     onEditTripClick = onEditTrip,
                     onCreateTripClick = onCreateTrip,

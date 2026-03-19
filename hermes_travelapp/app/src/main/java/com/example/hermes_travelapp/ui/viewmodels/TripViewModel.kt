@@ -6,6 +6,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.hermes_travelapp.domain.Trip
 import com.example.hermes_travelapp.domain.TripRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
@@ -20,7 +23,23 @@ class TripViewModel(private val repository: TripRepository) : ViewModel() {
     private val _errorMessage = MutableLiveData<String?>(null)
     val errorMessage: LiveData<String?> = _errorMessage
 
-    val trips: List<Trip> get() = repository.getTrips()
+    private val _trips = MutableStateFlow<List<Trip>>(emptyList())
+    /**
+     * Observable stream of all trips.
+     */
+    val trips: StateFlow<List<Trip>> = _trips.asStateFlow()
+
+    init {
+        loadTrips()
+    }
+
+    /**
+     * Loads trips from the repository and updates the [trips] StateFlow.
+     */
+    fun loadTrips() {
+        _trips.value = repository.getTrips()
+        Log.d(TAG, "loadTrips: loaded ${_trips.value.size} trips")
+    }
 
     /**
      * Validates trip dates and adds the trip if valid.
@@ -29,6 +48,7 @@ class TripViewModel(private val repository: TripRepository) : ViewModel() {
         if (validateTrip(trip)) {
             repository.addTrip(trip)
             _errorMessage.value = null
+            loadTrips()
             return true
         }
         return false
@@ -41,6 +61,7 @@ class TripViewModel(private val repository: TripRepository) : ViewModel() {
         if (validateTrip(updatedTrip)) {
             repository.editTrip(updatedTrip)
             _errorMessage.value = null
+            loadTrips()
             return true
         }
         return false
@@ -48,6 +69,7 @@ class TripViewModel(private val repository: TripRepository) : ViewModel() {
 
     fun deleteTrip(tripId: String) {
         repository.deleteTrip(tripId)
+        loadTrips()
     }
 
     /**
