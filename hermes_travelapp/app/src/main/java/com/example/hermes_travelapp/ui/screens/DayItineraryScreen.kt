@@ -11,12 +11,10 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
@@ -28,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -44,7 +41,6 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import java.util.UUID
 
 data class TripDayInfo(
     val id: String,
@@ -57,7 +53,6 @@ data class TripDayInfo(
     val budget: String
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DayItineraryScreen(
     tripId: String = "grecia_trip",
@@ -68,9 +63,6 @@ fun DayItineraryScreen(
     onBack: () -> Unit = {},
     onNavigateToEditActivity: (activityId: String) -> Unit = {}
 ) {
-    val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
-    
     val allTrips by tripViewModel.trips.collectAsState()
     val trip = allTrips.find { it.id == tripId }
     
@@ -78,10 +70,10 @@ fun DayItineraryScreen(
     val activities by activityViewModel.activities.collectAsState()
     val dayCounts by activityViewModel.dayCounts.collectAsState()
 
-    val dateFormatter = DateTimeFormatter.ofPattern("dd MMM", Locale("es", "ES"))
-    val dayOfWeekFormatter = DateTimeFormatter.ofPattern("EEE", Locale("es", "ES"))
+    val dateFormatter = DateTimeFormatter.ofPattern("dd MMM", Locale.getDefault())
+    val dayOfWeekFormatter = DateTimeFormatter.ofPattern("EEE", Locale.getDefault())
     
-    val uiDays = remember(domainDays, activities) {
+    val uiDays = remember(domainDays) {
         domainDays.map { domainDay ->
             TripDayInfo(
                 id = domainDay.id,
@@ -114,7 +106,7 @@ fun DayItineraryScreen(
     
     val pagerState = rememberPagerState(initialPage = initialPageIndex) { uiDays.size }
     
-    LaunchedEffect(uiDays) {
+    LaunchedEffect(tripId, uiDays) {
         if (uiDays.isNotEmpty()) {
             activityViewModel.loadAllDayCounts(tripId, uiDays.map { it.id })
         }
@@ -132,10 +124,40 @@ fun DayItineraryScreen(
         "€${total.toInt()}"
     }
 
+    DayItineraryContent(
+        tripTitle = trip?.title ?: stringResource(R.string.itinerary_title),
+        uiDays = uiDays,
+        dayCounts = dayCounts,
+        pagerState = pagerState,
+        activities = activities,
+        currentDayBudget = currentDayBudget,
+        onBack = onBack,
+        onAddActivity = { },
+        onEditActivity = onNavigateToEditActivity,
+        onDeleteActivity = { }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DayItineraryContent(
+    tripTitle: String,
+    uiDays: List<TripDayInfo>,
+    dayCounts: Map<String, Int>,
+    pagerState: PagerState,
+    activities: List<ItineraryItem>,
+    currentDayBudget: String,
+    onBack: () -> Unit,
+    onAddActivity: () -> Unit,
+    onEditActivity: (String) -> Unit,
+    onDeleteActivity: (ItineraryItem) -> Unit
+) {
+    val scope = rememberCoroutineScope()
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(trip?.title ?: stringResource(R.string.itinerary_title), fontWeight = FontWeight.Bold) },
+                title = { Text(tripTitle, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
@@ -149,7 +171,7 @@ fun DayItineraryScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /* showAddSheet logic */ },
+                onClick = onAddActivity,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = CircleShape
@@ -157,7 +179,6 @@ fun DayItineraryScreen(
                 Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(32.dp))
             }
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(
@@ -183,10 +204,10 @@ fun DayItineraryScreen(
                 
                 DayContent(
                     day = day.copy(budget = if(pageIndex == pagerState.currentPage) currentDayBudget else day.budget),
-                    activities = activities,
-                    onEdit = { /* ... */ },
-                    onDelete = { /* ... */ },
-                    onAddFirst = { /* ... */ }
+                    activities = if(pageIndex == pagerState.currentPage) activities else emptyList(),
+                    onEdit = onEditActivity,
+                    onDelete = onDeleteActivity,
+                    onAddFirst = onAddActivity
                 )
             }
         }
@@ -291,7 +312,7 @@ fun DayContent(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = day.subtitle.ifBlank { stringResource(R.string.itinerary_no_activities) }, // Ajustado si no hay descripción
+                    text = day.subtitle.ifBlank { stringResource(R.string.itinerary_no_activities) },
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.onBackground
@@ -314,12 +335,12 @@ fun DayContent(
                 EmptyActivitiesState(onAddFirst)
             }
         } else {
-            items(activities.size) { index ->
+            items(activities) { activity ->
                 ActivityTimelineItem(
-                    activity = activities[index],
-                    isLast = index == activities.size - 1,
-                    onEdit = { onEdit(activities[index].id) },
-                    onDelete = { onDelete(activities[index]) }
+                    activity = activity,
+                    isLast = activity == activities.last(),
+                    onEdit = { onEdit(activity.id) },
+                    onDelete = { onDelete(activity) }
                 )
             }
         }
@@ -392,7 +413,7 @@ fun ActivityTimelineItem(
                     modifier = Modifier.padding(vertical = 4.dp)
                 )
                 
-                if (!activity.description.isNullOrEmpty()) {
+                if (activity.description.isNotBlank()) {
                     Text(
                         text = activity.description,
                         style = MaterialTheme.typography.bodySmall,
@@ -409,11 +430,11 @@ fun ActivityTimelineItem(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(14.dp), tint = TerracotaSuave)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(activity.location ?: stringResource(R.string.itinerary_no_days), style = MaterialTheme.typography.labelMedium, color = Color.Gray) // Reusando temporalmente
+                        Text(activity.location ?: stringResource(R.string.itinerary_no_location), style = MaterialTheme.typography.labelMedium, color = Color.Gray)
                     }
                     if (activity.cost != null) {
                         Text(
-                            text = "€${activity.cost}",
+                            text = "€${activity.cost.toInt()}",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
                             color = DoradoAtenea
@@ -456,5 +477,57 @@ fun EmptyActivitiesState(onAddFirst: () -> Unit) {
             Spacer(modifier = Modifier.width(8.dp))
             Text(stringResource(R.string.itinerary_add_first_activity))
         }
+    }
+}
+
+@Preview(name = "Light Mode", showBackground = true)
+@Preview(name = "Dark Mode", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun DayItineraryPreview() {
+    val sampleDays = listOf(
+        TripDayInfo("1", 1, "15 Jul", LocalDate.now(), "Lun", "Llegada a Atenas", 2, "€50"),
+        TripDayInfo("2", 2, "16 Jul", LocalDate.now().plusDays(1), "Mar", "Acrópolis", 4, "€120")
+    )
+    
+    val sampleActivities = listOf(
+        ItineraryItem(
+            id = "1",
+            tripId = "t1",
+            dayId = "1",
+            title = "Visita al Partenón",
+            description = "Tour guiado por la Acrópolis de Atenas.",
+            date = LocalDate.now(),
+            time = LocalTime.of(9, 0),
+            location = "Atenas, Grecia",
+            cost = 20.0
+        ),
+        ItineraryItem(
+            id = "2",
+            tripId = "t1",
+            dayId = "1",
+            title = "Comida en Plaka",
+            description = "Degustación de comida típica griega.",
+            date = LocalDate.now(),
+            time = LocalTime.of(13, 30),
+            location = "Barrio de Plaka",
+            cost = 30.0
+        )
+    )
+    
+    val pagerState = rememberPagerState(initialPage = 0) { sampleDays.size }
+
+    Hermes_travelappTheme {
+        DayItineraryContent(
+            tripTitle = "Viaje a Grecia",
+            uiDays = sampleDays,
+            dayCounts = mapOf("1" to 2, "2" to 4),
+            pagerState = pagerState,
+            activities = sampleActivities,
+            currentDayBudget = "€50",
+            onBack = {},
+            onAddActivity = {},
+            onEditActivity = {},
+            onDeleteActivity = {}
+        )
     }
 }

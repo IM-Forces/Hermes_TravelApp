@@ -152,3 +152,11 @@ fun SplashScreenPreviewLight() {
         SplashScreenContent(progress = 0.5f)
     }
 }
+
+@Preview(showBackground = true, name = "Splash Mode Dark")
+@Composable
+fun SplashScreenPreviewDark() {
+    Hermes_travelappTheme(darkTheme = true) {
+        SplashScreenContent(progress = 0.5f)
+    }
+}

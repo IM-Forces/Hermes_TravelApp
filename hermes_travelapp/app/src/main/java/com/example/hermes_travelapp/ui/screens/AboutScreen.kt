@@ -231,3 +231,11 @@ fun AboutScreenPreviewLight() {
         AboutScreen()
     }
 }
+
+@Preview(showBackground = true, name = "About Mode Dark")
+@Composable
+fun AboutScreenPreviewDark() {
+    Hermes_travelappTheme(darkTheme = true) {
+        AboutScreen()
+    }
+}

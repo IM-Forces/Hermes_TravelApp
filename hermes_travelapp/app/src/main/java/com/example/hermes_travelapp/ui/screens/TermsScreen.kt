@@ -98,3 +98,11 @@ fun TermsScreenPreviewLight() {
         TermsScreen()
     }
 }
+
+@Preview(showBackground = true, name = "Terms Mode Dark")
+@Composable
+fun TermsScreenPreviewDark() {
+    Hermes_travelappTheme(darkTheme = true) {
+        TermsScreen()
+    }
+}

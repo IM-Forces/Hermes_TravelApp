@@ -234,3 +234,31 @@ fun HomeTopBar() {
         colors = TopAppBarDefaults.mediumTopAppBarColors(containerColor = MaterialTheme.colorScheme.secondary)
     )
 }
+
+@Preview(name = "Light Mode", showBackground = true)
+@Preview(name = "Dark Mode", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun HomeScreenPreview() {
+    val sampleItems = listOf(
+        RecommendationItem(
+            lugar = "Partenón",
+            tipo = "Monumento",
+            pais = "Grecia",
+            ciudadRegion = "Atenas",
+            precio = 20,
+            descripcion = "Templo dedicado a la diosa Atenea."
+        ),
+        RecommendationItem(
+            lugar = "Plaka",
+            tipo = "Barrio histórico",
+            pais = "Grecia",
+            ciudadRegion = "Atenas",
+            precio = 0,
+            descripcion = "El barrio más antiguo de Atenas."
+        )
+    )
+
+    Hermes_travelappTheme {
+        HomeScreen(items = sampleItems)
+    }
+}

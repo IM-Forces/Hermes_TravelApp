@@ -30,7 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hermes_travelapp.R
-import com.example.hermes_travelapp.domain.TripDay
+import com.example.hermes_travelapp.domain.Trip
 import com.example.hermes_travelapp.ui.theme.*
 import com.example.hermes_travelapp.ui.viewmodels.TripDayViewModel
 import com.example.hermes_travelapp.ui.viewmodels.TripViewModel
@@ -46,7 +46,6 @@ data class TripDayUI(
     val activitiesCount: Int
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripOverviewScreen(
     tripId: String,
@@ -57,7 +56,6 @@ fun TripOverviewScreen(
 ) {
     val allTrips by tripViewModel.trips.collectAsState()
     val trip = allTrips.find { it.id == tripId }
-    
     val realDays by tripDayViewModel.tripDays.collectAsState()
     
     LaunchedEffect(tripId) {
@@ -85,6 +83,21 @@ fun TripOverviewScreen(
         )
     }
 
+    TripOverviewContent(
+        trip = trip,
+        uiDays = uiDays,
+        onDayClick = onDayClick,
+        onBack = onBack
+    )
+}
+
+@Composable
+fun TripOverviewContent(
+    trip: Trip,
+    uiDays: List<TripDayUI>,
+    onDayClick: (dayId: String) -> Unit = {},
+    onBack: () -> Unit = {}
+) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
@@ -97,7 +110,6 @@ fun TripOverviewScreen(
                 TripOverviewHeader(
                     tripName = "${trip.emoji} ${trip.title}",
                     dates = "${trip.startDate} - ${trip.endDate}",
-                    duration = "",
                     daysRemaining = trip.daysRemaining,
                     onBack = onBack
                 )
@@ -159,20 +171,20 @@ fun TripOverviewScreen(
 }
 
 @Composable
-fun TripOverviewHeader(tripName: String, dates: String, duration: String, daysRemaining: Int, onBack: () -> Unit) {
+fun TripOverviewHeader(tripName: String, dates: String, daysRemaining: Int, onBack: () -> Unit) {
     Box(modifier = Modifier.fillMaxWidth().height(280.dp).background(MaterialTheme.colorScheme.surfaceVariant)) {
         Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f)))))
         IconButton(onClick = onBack, modifier = Modifier.statusBarsPadding().padding(8.dp).align(Alignment.TopStart).background(Color.Black.copy(alpha = 0.3f), CircleShape)) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back), tint = BlancoMarmol)
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back), tint = Color.White)
         }
         Column(modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(text = tripName, style = MaterialTheme.typography.headlineMedium, color = BlancoMarmol, fontWeight = FontWeight.Bold)
+                Text(text = tripName, style = MaterialTheme.typography.headlineMedium, color = Color.White, fontWeight = FontWeight.Bold)
                 Surface(color = DoradoAtenea, shape = RoundedCornerShape(8.dp)) {
                     Text(text = stringResource(R.string.itinerary_days_remaining, daysRemaining), style = MaterialTheme.typography.labelMedium, color = Color.Black, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
                 }
             }
-            Text(text = "📅 $dates" + (if (duration.isNotBlank()) " • $duration" else ""), style = MaterialTheme.typography.bodyLarge, color = BlancoMarmol.copy(alpha = 0.8f))
+            Text(text = "📅 $dates", style = MaterialTheme.typography.bodyLarge, color = Color.White.copy(alpha = 0.8f))
         }
     }
 }
@@ -217,5 +229,34 @@ fun TimelineDayItem(day: TripDayUI, isFirst: Boolean, isLast: Boolean, onClick: 
                 Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
             }
         }
+    }
+}
+
+@Preview(name = "Light Mode", showBackground = true)
+@Preview(name = "Dark Mode", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun TripOverviewPreview() {
+    val sampleTrip = Trip(
+        title = "Atenas y Santorini",
+        startDate = "15/07/2025",
+        endDate = "22/07/2025",
+        description = "Un viaje por la cuna de la civilización.",
+        emoji = "🏛️",
+        budget = 2500,
+        spent = 1200,
+        daysRemaining = 12
+    )
+    
+    val sampleDays = listOf(
+        TripDayUI("1", "15 Jul", "Lun", 1, "Llegada a Atenas", 2),
+        TripDayUI("2", "16 Jul", "Mar", 2, "Acrópolis y Plaka", 4),
+        TripDayUI("3", "17 Jul", "Mie", 3, "Museo Arqueológico", 3)
+    )
+
+    Hermes_travelappTheme {
+        TripOverviewContent(
+            trip = sampleTrip,
+            uiDays = sampleDays
+        )
     }
 }

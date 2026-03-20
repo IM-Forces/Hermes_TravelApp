@@ -1,12 +1,12 @@
 package com.example.hermes_travelapp.ui.screens
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Language
@@ -19,11 +19,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.hermes_travelapp.R
 import com.example.hermes_travelapp.data.PreferencesManager
+import com.example.hermes_travelapp.ui.theme.Hermes_travelappTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PreferencesScreen(onBack: () -> Unit = {}) {
     val context = LocalContext.current
@@ -34,6 +35,40 @@ fun PreferencesScreen(onBack: () -> Unit = {}) {
     var isDarkMode by remember { mutableStateOf(prefsManager.isDarkMode) }
     var language by remember { mutableStateOf(prefsManager.language) }
 
+    PreferencesScreenContent(
+        username = username,
+        onUsernameChange = { username = it },
+        dateOfBirth = dateOfBirth,
+        onDateOfBirthChange = { dateOfBirth = it },
+        isDarkMode = isDarkMode,
+        onDarkModeChange = { isDarkMode = it },
+        language = language,
+        onLanguageChange = { language = it },
+        onSave = {
+            prefsManager.username = username
+            prefsManager.dateOfBirth = dateOfBirth
+            prefsManager.isDarkMode = isDarkMode
+            prefsManager.language = language
+            onBack()
+        },
+        onBack = onBack
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PreferencesScreenContent(
+    username: String,
+    onUsernameChange: (String) -> Unit,
+    dateOfBirth: String,
+    onDateOfBirthChange: (String) -> Unit,
+    isDarkMode: Boolean,
+    onDarkModeChange: (Boolean) -> Unit,
+    language: String,
+    onLanguageChange: (String) -> Unit,
+    onSave: () -> Unit,
+    onBack: () -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -62,7 +97,7 @@ fun PreferencesScreen(onBack: () -> Unit = {}) {
             
             OutlinedTextField(
                 value = username,
-                onValueChange = { username = it },
+                onValueChange = onUsernameChange,
                 label = { Text(stringResource(R.string.prefs_username)) },
                 modifier = Modifier.fillMaxWidth(),
                 leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) }
@@ -70,7 +105,7 @@ fun PreferencesScreen(onBack: () -> Unit = {}) {
 
             OutlinedTextField(
                 value = dateOfBirth,
-                onValueChange = { dateOfBirth = it },
+                onValueChange = onDateOfBirthChange,
                 label = { Text(stringResource(R.string.prefs_dob)) },
                 modifier = Modifier.fillMaxWidth(),
                 leadingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = null) }
@@ -82,10 +117,10 @@ fun PreferencesScreen(onBack: () -> Unit = {}) {
 
             PreferenceSwitchItem(
                 title = stringResource(R.string.prefs_dark_mode),
-                subtitle = if (isDarkMode) "On" else "Off",
+                subtitle = if (isDarkMode) stringResource(R.string.prefs_on) else stringResource(R.string.prefs_off),
                 icon = Icons.Default.DarkMode,
                 checked = isDarkMode,
-                onCheckedChange = { isDarkMode = it }
+                onCheckedChange = onDarkModeChange
             )
 
             Row(
@@ -110,9 +145,9 @@ fun PreferencesScreen(onBack: () -> Unit = {}) {
                         })
                     }
                     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                        DropdownMenuItem(text = { Text("English") }, onClick = { language = "en"; expanded = false })
-                        DropdownMenuItem(text = { Text("Español") }, onClick = { language = "es"; expanded = false })
-                        DropdownMenuItem(text = { Text("Català") }, onClick = { language = "ca"; expanded = false })
+                        DropdownMenuItem(text = { Text("English") }, onClick = { onLanguageChange("en"); expanded = false })
+                        DropdownMenuItem(text = { Text("Español") }, onClick = { onLanguageChange("es"); expanded = false })
+                        DropdownMenuItem(text = { Text("Català") }, onClick = { onLanguageChange("ca"); expanded = false })
                     }
                 }
             }
@@ -120,13 +155,7 @@ fun PreferencesScreen(onBack: () -> Unit = {}) {
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
-                onClick = {
-                    prefsManager.username = username
-                    prefsManager.dateOfBirth = dateOfBirth
-                    prefsManager.isDarkMode = isDarkMode
-                    prefsManager.language = language
-                    onBack()
-                },
+                onClick = onSave,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             ) {
@@ -148,5 +177,25 @@ fun PreferenceSwitchItem(title: String, subtitle: String, icon: ImageVector, che
             }
             Switch(checked = checked, onCheckedChange = onCheckedChange)
         }
+    }
+}
+
+@Preview(showBackground = true, name = "Light Mode")
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES, name = "Dark Mode")
+@Composable
+fun PreferencesScreenPreview() {
+    Hermes_travelappTheme {
+        PreferencesScreenContent(
+            username = "John Doe",
+            onUsernameChange = {},
+            dateOfBirth = "01/01/1990",
+            onDateOfBirthChange = {},
+            isDarkMode = false,
+            onDarkModeChange = {},
+            language = "en",
+            onLanguageChange = {},
+            onSave = {},
+            onBack = {}
+        )
     }
 }
