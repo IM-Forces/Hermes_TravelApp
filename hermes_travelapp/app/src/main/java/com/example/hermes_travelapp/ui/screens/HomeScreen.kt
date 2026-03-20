@@ -19,7 +19,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -68,7 +67,6 @@ fun loadRecommendationsFromAssets(context: Context): List<RecommendationItem> {
     return items
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     items: List<RecommendationItem>? = null,
@@ -76,9 +74,26 @@ fun HomeScreen(
     onToggleFavorite: (RecommendationItem) -> Unit = {},
     accountViewModel: AccountViewModel = viewModel()
 ) {
+    val username by accountViewModel.username.collectAsState()
+
+    HomeScreenContent(
+        username = username,
+        items = items,
+        favorites = favorites,
+        onToggleFavorite = onToggleFavorite
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeScreenContent(
+    username: String,
+    items: List<RecommendationItem>? = null,
+    favorites: List<RecommendationItem> = emptyList(),
+    onToggleFavorite: (RecommendationItem) -> Unit = {}
+) {
     val context = LocalContext.current
     val recommendations = remember(items) { items ?: loadRecommendationsFromAssets(context) }
-    val username by accountViewModel.username.collectAsState()
 
     Scaffold(
         topBar = { HomeTopBar(username = username) },
@@ -266,6 +281,6 @@ fun HomeScreenPreview() {
     )
 
     Hermes_travelappTheme {
-        HomeScreen(items = sampleItems)
+        HomeScreenContent(username = "Vítor Da Silva", items = sampleItems)
     }
 }

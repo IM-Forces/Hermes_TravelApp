@@ -35,11 +35,9 @@ import com.example.hermes_travelapp.R
 import com.example.hermes_travelapp.ui.theme.Hermes_travelappTheme
 import com.example.hermes_travelapp.ui.viewmodels.AccountViewModel
 import java.time.Instant
-import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountScreen(
     onNavigateBack: () -> Unit = {},
@@ -50,7 +48,37 @@ fun AccountScreen(
     val email by viewModel.email.collectAsState()
     val password by viewModel.password.collectAsState()
     val dateError by viewModel.dateError.collectAsState()
-    
+
+    AccountScreenContent(
+        username = username,
+        birthDate = birthDate,
+        email = email,
+        password = password,
+        dateError = dateError,
+        onNavigateBack = onNavigateBack,
+        onUpdateUsername = { viewModel.updateUsername(it) },
+        onUpdateBirthDate = { viewModel.updateBirthDate(it) },
+        onUpdateEmail = { viewModel.updateEmail(it) },
+        onUpdatePassword = { viewModel.updatePassword(it) },
+        onSaveAccount = { viewModel.saveAccount() }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AccountScreenContent(
+    username: String,
+    birthDate: String,
+    email: String,
+    password: String,
+    dateError: String?,
+    onNavigateBack: () -> Unit,
+    onUpdateUsername: (String) -> Unit,
+    onUpdateBirthDate: (String) -> Unit,
+    onUpdateEmail: (String) -> Unit,
+    onUpdatePassword: (String) -> Unit,
+    onSaveAccount: () -> Unit
+) {
     var passwordVisible by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     
@@ -64,7 +92,7 @@ fun AccountScreen(
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
                         val date = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate()
-                        viewModel.updateBirthDate(date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+                        onUpdateBirthDate(date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
                     }
                     showDatePicker = false
                 }) {
@@ -150,7 +178,7 @@ fun AccountScreen(
             ) {
                 OutlinedTextField(
                     value = username,
-                    onValueChange = { viewModel.updateUsername(it) },
+                    onValueChange = onUpdateUsername,
                     label = { Text(stringResource(R.string.account_username)) },
                     leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
@@ -180,7 +208,7 @@ fun AccountScreen(
 
                 OutlinedTextField(
                     value = email,
-                    onValueChange = { viewModel.updateEmail(it) },
+                    onValueChange = onUpdateEmail,
                     label = { Text(stringResource(R.string.account_email)) },
                     leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
@@ -190,7 +218,7 @@ fun AccountScreen(
 
                 OutlinedTextField(
                     value = password,
-                    onValueChange = { viewModel.updatePassword(it) },
+                    onValueChange = onUpdatePassword,
                     label = { Text(stringResource(R.string.account_password)) },
                     leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                     trailingIcon = {
@@ -206,7 +234,7 @@ fun AccountScreen(
                 )
 
                 Button(
-                    onClick = { viewModel.saveAccount() },
+                    onClick = onSaveAccount,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 24.dp, bottom = 32.dp)
@@ -231,7 +259,19 @@ fun AccountScreen(
 @Composable
 fun AccountScreenPreviewLight() {
     Hermes_travelappTheme(darkTheme = false) {
-        AccountScreen()
+        AccountScreenContent(
+            username = "Vítor Da Silva",
+            birthDate = "01/01/1990",
+            email = "vitor.dasilva@example.com",
+            password = "password123",
+            dateError = null,
+            onNavigateBack = {},
+            onUpdateUsername = {},
+            onUpdateBirthDate = {},
+            onUpdateEmail = {},
+            onUpdatePassword = {},
+            onSaveAccount = {}
+        )
     }
 }
 
@@ -239,6 +279,18 @@ fun AccountScreenPreviewLight() {
 @Composable
 fun AccountScreenPreviewDark() {
     Hermes_travelappTheme(darkTheme = true) {
-        AccountScreen()
+        AccountScreenContent(
+            username = "Vítor Da Silva",
+            birthDate = "01/01/1990",
+            email = "vitor.dasilva@example.com",
+            password = "password123",
+            dateError = null,
+            onNavigateBack = {},
+            onUpdateUsername = {},
+            onUpdateBirthDate = {},
+            onUpdateEmail = {},
+            onUpdatePassword = {},
+            onSaveAccount = {}
+        )
     }
 }

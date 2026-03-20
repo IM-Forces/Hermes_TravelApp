@@ -24,11 +24,31 @@ import com.example.hermes_travelapp.ui.viewmodels.TripViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateTripScreen(
     tripToEdit: Trip? = null,
     tripViewModel: TripViewModel? = null,
+    onBack: () -> Unit = {},
+    onSaveTrip: (Trip) -> Unit = {}
+) {
+    val errorMessageState = tripViewModel?.errorMessage?.observeAsState()
+    val errorMessage = errorMessageState?.value
+
+    CreateTripScreenContent(
+        tripToEdit = tripToEdit,
+        errorMessage = errorMessage,
+        onClearError = { tripViewModel?.clearError() },
+        onBack = onBack,
+        onSaveTrip = onSaveTrip
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CreateTripScreenContent(
+    tripToEdit: Trip? = null,
+    errorMessage: String? = null,
+    onClearError: () -> Unit = {},
     onBack: () -> Unit = {},
     onSaveTrip: (Trip) -> Unit = {}
 ) {
@@ -41,14 +61,11 @@ fun CreateTripScreen(
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
 
-    val errorMessageState = tripViewModel?.errorMessage?.observeAsState()
-    val errorMessage = errorMessageState?.value
-
     if (errorMessage != null) {
         AlertDialog(
-            onDismissRequest = { tripViewModel?.clearError() },
+            onDismissRequest = onClearError,
             confirmButton = {
-                TextButton(onClick = { tripViewModel?.clearError() }) {
+                TextButton(onClick = onClearError) {
                     Text(stringResource(R.string.back))
                 }
             },
@@ -147,7 +164,7 @@ fun CreateTripScreen(
             OutlinedTextField(
                 value = budget,
                 onValueChange = { budget = it },
-                label = { Text(stringResource(R.string.prefs_settings) + " (€)") }, // Usando un string existente de presupuesto si hubiera uno mejor
+                label = { Text(stringResource(R.string.prefs_settings) + " (€)") }, 
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -228,6 +245,6 @@ fun DatePickerDialogWrapper(onDateSelected: (String) -> Unit, onDismiss: () -> U
 @Composable
 fun CreateTripScreenPreview() {
     Hermes_travelappTheme {
-        CreateTripScreen()
+        CreateTripScreenContent()
     }
 }

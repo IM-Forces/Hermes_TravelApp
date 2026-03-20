@@ -32,7 +32,6 @@ import com.example.hermes_travelapp.data.PreferencesManager
 import com.example.hermes_travelapp.ui.theme.Hermes_travelappTheme
 import com.example.hermes_travelapp.ui.viewmodels.ThemeViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PreferencesScreen(
     onBack: () -> Unit = {},
@@ -42,10 +41,32 @@ fun PreferencesScreen(
     val prefsManager = remember { PreferencesManager(context) }
     val isDarkMode by themeViewModel.isDarkMode.collectAsState()
     
+    val currentLangCode = prefsManager.language
+    
+    PreferencesScreenContent(
+        isDarkMode = isDarkMode,
+        currentLangCode = currentLangCode,
+        onBack = onBack,
+        onToggleDarkMode = { themeViewModel.toggleDarkMode(it) },
+        onLanguageChange = { langCode ->
+            prefsManager.language = langCode
+            applyLocale(context, langCode)
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PreferencesScreenContent(
+    isDarkMode: Boolean,
+    currentLangCode: String,
+    onBack: () -> Unit = {},
+    onToggleDarkMode: (Boolean) -> Unit = {},
+    onLanguageChange: (String) -> Unit = {}
+) {
     var notificationsEnabled by remember { mutableStateOf(true) }
     var emailUpdatesEnabled by remember { mutableStateOf(false) }
     
-    val currentLangCode = prefsManager.language
     val currentLangDisplay = when (currentLangCode) {
         "es" -> "Español"
         "ca" -> "Català"
@@ -64,19 +85,16 @@ fun PreferencesScreen(
             text = {
                 Column {
                     LanguageOption("English", "en") { 
-                        prefsManager.language = "en"
+                        onLanguageChange("en")
                         showLanguageDialog = false
-                        applyLocale(context, "en")
                     }
                     LanguageOption("Español", "es") { 
-                        prefsManager.language = "es"
+                        onLanguageChange("es")
                         showLanguageDialog = false
-                        applyLocale(context, "es")
                     }
                     LanguageOption("Català", "ca") { 
-                        prefsManager.language = "ca"
+                        onLanguageChange("ca")
                         showLanguageDialog = false
-                        applyLocale(context, "ca")
                     }
                 }
             },
@@ -161,7 +179,7 @@ fun PreferencesScreen(
                 subtitle = if (isDarkMode) stringResource(R.string.prefs_on) else stringResource(R.string.prefs_off),
                 icon = Icons.Default.DarkMode,
                 checked = isDarkMode,
-                onCheckedChange = { themeViewModel.toggleDarkMode(it) }
+                onCheckedChange = onToggleDarkMode
             )
 
             PreferenceItem(
@@ -299,7 +317,10 @@ fun PreferenceSwitchItem(
 @Composable
 fun PreferencesScreenPreviewLight() {
     Hermes_travelappTheme(darkTheme = false) {
-        PreferencesScreen()
+        PreferencesScreenContent(
+            isDarkMode = false,
+            currentLangCode = "en"
+        )
     }
 }
 
@@ -307,6 +328,9 @@ fun PreferencesScreenPreviewLight() {
 @Composable
 fun PreferencesScreenPreviewDark() {
     Hermes_travelappTheme(darkTheme = true) {
-        PreferencesScreen()
+        PreferencesScreenContent(
+            isDarkMode = true,
+            currentLangCode = "en"
+        )
     }
 }

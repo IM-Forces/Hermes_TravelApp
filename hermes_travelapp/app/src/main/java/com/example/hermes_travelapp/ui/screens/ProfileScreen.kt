@@ -42,8 +42,29 @@ fun ProfileScreen(
     onNavigateToTerms: () -> Unit = {},
     accountViewModel: AccountViewModel = viewModel()
 ) {
-    val scrollState = rememberScrollState()
     val username by accountViewModel.username.collectAsState()
+    val email by accountViewModel.email.collectAsState()
+
+    ProfileScreenContent(
+        username = username,
+        email = email,
+        onNavigateToAccount = onNavigateToAccount,
+        onNavigateToAbout = onNavigateToAbout,
+        onNavigateToPreferences = onNavigateToPreferences,
+        onNavigateToTerms = onNavigateToTerms
+    )
+}
+
+@Composable
+fun ProfileScreenContent(
+    username: String,
+    email: String,
+    onNavigateToAccount: () -> Unit = {},
+    onNavigateToAbout: () -> Unit = {},
+    onNavigateToPreferences: () -> Unit = {},
+    onNavigateToTerms: () -> Unit = {}
+) {
+    val scrollState = rememberScrollState()
     val initials = if (username.length >= 2) username.take(2).uppercase() else username.uppercase()
     
     Surface(
@@ -96,7 +117,7 @@ fun ProfileScreen(
                     )
                     
                     Text(
-                        text = "vitor.dasilva@example.com",
+                        text = email,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                     )
@@ -268,7 +289,10 @@ fun ProfileOptionItem(
 @Composable
 fun ProfileScreenPreviewLight() {
     Hermes_travelappTheme(darkTheme = false) {
-        ProfileScreen()
+        ProfileScreenContent(
+            username = "Vítor Da Silva",
+            email = "vitor.dasilva@example.com"
+        )
     }
 }
 
@@ -276,6 +300,9 @@ fun ProfileScreenPreviewLight() {
 @Composable
 fun ProfileScreenPreviewDark() {
     Hermes_travelappTheme(darkTheme = true) {
-        ProfileScreen()
+        ProfileScreenContent(
+            username = "Vítor Da Silva",
+            email = "vitor.dasilva@example.com"
+        )
     }
 }
