@@ -38,18 +38,23 @@ class TripViewModel(private val repository: TripRepository) : ViewModel() {
      * Loads trips from the repository and updates the [trips] StateFlow.
      */
     fun loadTrips() {
-        _trips.value = repository.getTrips()
-        Log.d(TAG, "loadTrips: loaded ${_trips.value.size} trips")
+        Log.d(TAG, "loadTrips: initiating trip loading from repository")
+        val result = repository.getTrips()
+        _trips.value = result
+        Log.d(TAG, "Trip list updated, total: ${_trips.value.size}")
+        Log.i(TAG, "loadTrips: successfully loaded ${result.size} trips")
     }
 
     /**
      * Validates trip dates and adds the trip if valid.
      */
     fun addTrip(trip: Trip): Boolean {
+        Log.d(TAG, "addTrip: attempting to add trip '${trip.title}'")
         if (validateTrip(trip)) {
             repository.addTrip(trip)
             _errorMessageRes.value = null
             loadTrips()
+            Log.i(TAG, "Trip created successfully: ${trip.title} (id=${trip.id})")
             return true
         }
         return false
@@ -59,26 +64,31 @@ class TripViewModel(private val repository: TripRepository) : ViewModel() {
      * Validates trip dates and updates the trip if valid.
      */
     fun editTrip(updatedTrip: Trip): Boolean {
+        Log.d(TAG, "editTrip: attempting to edit trip id=${updatedTrip.id}")
         if (validateTrip(updatedTrip)) {
             repository.editTrip(updatedTrip)
             _errorMessageRes.value = null
             loadTrips()
+            Log.i(TAG, "Trip updated successfully: ${updatedTrip.title} (id=${updatedTrip.id})")
             return true
         }
         return false
     }
 
     fun deleteTrip(tripId: String) {
+        Log.d(TAG, "deleteTrip: attempting to delete trip id=$tripId")
         repository.deleteTrip(tripId)
         loadTrips()
+        Log.i(TAG, "Trip deleted successfully: id=$tripId")
     }
 
     fun updateTripEndDate(tripId: String, newEndDate: String) {
+        Log.d(TAG, "updateTripEndDate: updating end date for trip id=$tripId to $newEndDate")
         val trip = _trips.value.find { it.id == tripId } ?: return
         val updatedTrip = trip.copy(endDate = newEndDate)
         repository.editTrip(updatedTrip)
         loadTrips()
-        Log.d(TAG, "updateTripEndDate: tripId=$tripId newEndDate=$newEndDate")
+        Log.i(TAG, "Trip end date updated successfully for trip id=$tripId")
     }
 
     /**
@@ -93,7 +103,13 @@ class TripViewModel(private val repository: TripRepository) : ViewModel() {
      * Checks for mandatory dates and ensures start date is before end date.
      */
     private fun validateTrip(trip: Trip): Boolean {
-        // Check for empty/null dates (since they are Strings in the domain model)
+        if (trip.title.isBlank()) {
+            val error = "El título del viaje es obligatorio"
+            _errorMessage.value = error
+            Log.e(TAG, "Validation failed: title is blank")
+            return false
+        }
+
         if (trip.startDate.isBlank() || trip.endDate.isBlank()) {
             Log.e(TAG, "error_required_dates")
             _errorMessageRes.value = R.string.error_required_dates

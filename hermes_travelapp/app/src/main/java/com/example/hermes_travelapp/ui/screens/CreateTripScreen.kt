@@ -1,6 +1,7 @@
 package com.example.hermes_travelapp.ui.screens
 
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
