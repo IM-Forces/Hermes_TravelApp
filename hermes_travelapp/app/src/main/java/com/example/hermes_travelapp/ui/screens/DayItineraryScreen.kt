@@ -209,9 +209,9 @@ fun DayItineraryScreen(
         }
 
         if (showAddSheet) {
-            AddActivityBottomSheet(
+            ActivityBottomSheet(
                 onDismiss = { showAddSheet = false },
-                onAdd = { newItem ->
+                onConfirm = { newItem ->
                     val currentDay = uiDays[pagerState.currentPage]
                     val activityWithContext = newItem.copy(
                         tripId = tripId,
@@ -228,13 +228,13 @@ fun DayItineraryScreen(
         }
 
         if (showEditSheet && activityToEdit != null) {
-            EditActivityBottomSheet(
-                activity = activityToEdit!!,
+            ActivityBottomSheet(
+                activity = activityToEdit,
                 onDismiss = { 
                     showEditSheet = false
                     activityToEdit = null
                 },
-                onSave = { updatedItem ->
+                onConfirm = { updatedItem ->
                     activityViewModel.updateActivity(updatedItem)
                     showEditSheet = false
                     activityToEdit = null
@@ -519,238 +519,156 @@ fun EmptyActivitiesState(onAddFirst: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddActivityBottomSheet(
+fun ActivityBottomSheet(
+    activity: ItineraryItem? = null,
     onDismiss: () -> Unit,
-    onAdd: (ItineraryItem) -> Unit,
+    onConfirm: (ItineraryItem) -> Unit,
     sheetState: SheetState
 ) {
-    var title by remember { mutableStateOf("") }
-    var titleError by remember { mutableStateOf(false) }
-    var location by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var descriptionError by remember { mutableStateOf(false) }
-    var cost by remember { mutableStateOf("") }
-    var selectedTime by remember { mutableStateOf(LocalTime.now()) }
-    var showTimePicker by remember { mutableStateOf(false) }
-
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         dragHandle = { BottomSheetDefaults.DragHandle() },
         containerColor = MaterialTheme.colorScheme.surface,
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 32.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(stringResource(R.string.itinerary_new_activity), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-
-            OutlinedTextField(
-                value = title,
-                onValueChange = { title = it; if (it.isNotBlank()) titleError = false },
-                label = { Text(stringResource(R.string.itinerary_activity_title)) },
-                modifier = Modifier.fillMaxWidth(),
-                isError = titleError,
-                supportingText = { if (titleError) Text(stringResource(R.string.itinerary_activity_title_err)) },
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            OutlinedTextField(
-                value = selectedTime.format(DateTimeFormatter.ofPattern("HH:mm")),
-                onValueChange = {},
-                label = { Text(stringResource(R.string.itinerary_activity_time)) },
-                modifier = Modifier.fillMaxWidth().clickable { showTimePicker = true },
-                enabled = false,
-                readOnly = true,
-                leadingIcon = { Icon(Icons.Default.AccessTime, null) },
-                colors = OutlinedTextFieldDefaults.colors(
-                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                    disabledBorderColor = MaterialTheme.colorScheme.outline,
-                    disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
-                ),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            OutlinedTextField(
-                value = location,
-                onValueChange = { location = it },
-                label = { Text(stringResource(R.string.itinerary_activity_location)) },
-                modifier = Modifier.fillMaxWidth(),
-                leadingIcon = { Icon(Icons.Default.LocationOn, null) },
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it; if (it.isNotBlank()) descriptionError = false },
-                label = { Text(stringResource(R.string.itinerary_activity_desc)) },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 3,
-                isError = descriptionError,
-                supportingText = { if (descriptionError) Text(stringResource(R.string.itinerary_activity_desc_err)) },
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            OutlinedTextField(
-                value = cost,
-                onValueChange = { if (it.isEmpty() || it.toDoubleOrNull() != null) cost = it },
-                label = { Text(stringResource(R.string.itinerary_activity_cost)) },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                leadingIcon = { Icon(Icons.Default.Payments, null) },
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)) {
-                    Text(stringResource(R.string.cancel))
-                }
-                Button(
-                    onClick = {
-                        var hasError = false
-                        if (title.isBlank()) { titleError = true; hasError = true }
-                        if (description.isBlank()) { descriptionError = true; hasError = true }
-                        if (!hasError) {
-                            onAdd(ItineraryItem(UUID.randomUUID().toString(), "", "", title, description, LocalDate.now(), selectedTime, location.ifBlank { null }, cost.toDoubleOrNull()))
-                        }
-                    },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(Icons.Default.Check, null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.add))
-                }
-            }
-        }
-    }
-
-    if (showTimePicker) {
-        val timePickerState = rememberTimePickerState(initialHour = selectedTime.hour, initialMinute = selectedTime.minute, is24Hour = true)
-        AlertDialog(
-            onDismissRequest = { showTimePicker = false },
-            confirmButton = { TextButton(onClick = { selectedTime = LocalTime.of(timePickerState.hour, timePickerState.minute); showTimePicker = false }) { Text(stringResource(R.string.ok)) } },
-            dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text(stringResource(R.string.cancel)) } },
-            text = { TimePicker(state = timePickerState) }
+        ActivityFormContent(
+            initialActivity = activity,
+            onDismiss = onDismiss,
+            onConfirm = onConfirm
         )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditActivityBottomSheet(
-    activity: ItineraryItem,
+fun ActivityFormContent(
+    initialActivity: ItineraryItem? = null,
     onDismiss: () -> Unit,
-    onSave: (ItineraryItem) -> Unit,
-    sheetState: SheetState
+    onConfirm: (ItineraryItem) -> Unit
 ) {
-    var title by remember { mutableStateOf(activity.title) }
+    val isEditMode = initialActivity != null
+    
+    var title by remember { mutableStateOf(initialActivity?.title ?: "") }
     var titleError by remember { mutableStateOf(false) }
-    var location by remember { mutableStateOf(activity.location ?: "") }
-    var description by remember { mutableStateOf(activity.description) }
+    var location by remember { mutableStateOf(initialActivity?.location ?: "") }
+    var description by remember { mutableStateOf(initialActivity?.description ?: "") }
     var descriptionError by remember { mutableStateOf(false) }
-    var cost by remember { mutableStateOf(activity.cost?.toString() ?: "") }
-    var selectedTime by remember { mutableStateOf(activity.time) }
+    var cost by remember { mutableStateOf(initialActivity?.cost?.toString() ?: "") }
+    var selectedTime by remember { mutableStateOf(initialActivity?.time ?: LocalTime.now()) }
     var showTimePicker by remember { mutableStateOf(false) }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        dragHandle = { BottomSheetDefaults.DragHandle() },
-        containerColor = MaterialTheme.colorScheme.surface,
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .padding(bottom = 32.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 32.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(stringResource(R.string.itinerary_edit_activity), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Text(
+            text = stringResource(if (isEditMode) R.string.itinerary_edit_activity else R.string.itinerary_new_activity),
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
 
-            OutlinedTextField(
-                value = title,
-                onValueChange = { title = it; if (it.isNotBlank()) titleError = false },
-                label = { Text(stringResource(R.string.itinerary_activity_title)) },
-                modifier = Modifier.fillMaxWidth(),
-                isError = titleError,
-                supportingText = { if (titleError) Text(stringResource(R.string.itinerary_activity_title_err)) },
-                shape = RoundedCornerShape(12.dp)
-            )
+        OutlinedTextField(
+            value = title,
+            onValueChange = { title = it; if (it.isNotBlank()) titleError = false },
+            label = { Text(stringResource(R.string.itinerary_activity_title)) },
+            modifier = Modifier.fillMaxWidth(),
+            isError = titleError,
+            supportingText = { if (titleError) Text(stringResource(R.string.itinerary_activity_title_err)) },
+            shape = RoundedCornerShape(12.dp)
+        )
 
-            OutlinedTextField(
-                value = selectedTime.format(DateTimeFormatter.ofPattern("HH:mm")),
-                onValueChange = {},
-                label = { Text(stringResource(R.string.itinerary_activity_time)) },
-                modifier = Modifier.fillMaxWidth().clickable { showTimePicker = true },
-                enabled = false,
-                readOnly = true,
-                leadingIcon = { Icon(Icons.Default.AccessTime, null) },
-                colors = OutlinedTextFieldDefaults.colors(
-                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                    disabledBorderColor = MaterialTheme.colorScheme.outline,
-                    disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
-                ),
-                shape = RoundedCornerShape(12.dp)
-            )
+        OutlinedTextField(
+            value = selectedTime.format(DateTimeFormatter.ofPattern("HH:mm")),
+            onValueChange = {},
+            label = { Text(stringResource(R.string.itinerary_activity_time)) },
+            modifier = Modifier.fillMaxWidth().clickable { showTimePicker = true },
+            enabled = false,
+            readOnly = true,
+            leadingIcon = { Icon(Icons.Default.AccessTime, null) },
+            colors = OutlinedTextFieldDefaults.colors(
+                disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                disabledBorderColor = MaterialTheme.colorScheme.outline,
+                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
+            shape = RoundedCornerShape(12.dp)
+        )
 
-            OutlinedTextField(
-                value = location,
-                onValueChange = { location = it },
-                label = { Text(stringResource(R.string.itinerary_activity_location)) },
-                modifier = Modifier.fillMaxWidth(),
-                leadingIcon = { Icon(Icons.Default.LocationOn, null) },
-                shape = RoundedCornerShape(12.dp)
-            )
+        OutlinedTextField(
+            value = location,
+            onValueChange = { location = it },
+            label = { Text(stringResource(R.string.itinerary_activity_location)) },
+            modifier = Modifier.fillMaxWidth(),
+            leadingIcon = { Icon(Icons.Default.LocationOn, null) },
+            shape = RoundedCornerShape(12.dp)
+        )
 
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it; if (it.isNotBlank()) descriptionError = false },
-                label = { Text(stringResource(R.string.itinerary_activity_desc)) },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 3,
-                isError = descriptionError,
-                supportingText = { if (descriptionError) Text(stringResource(R.string.itinerary_activity_desc_err)) },
-                shape = RoundedCornerShape(12.dp)
-            )
+        OutlinedTextField(
+            value = description,
+            onValueChange = { description = it; if (it.isNotBlank()) descriptionError = false },
+            label = { Text(stringResource(R.string.itinerary_activity_desc)) },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3,
+            isError = descriptionError,
+            supportingText = { if (descriptionError) Text(stringResource(R.string.itinerary_activity_desc_err)) },
+            shape = RoundedCornerShape(12.dp)
+        )
 
-            OutlinedTextField(
-                value = cost,
-                onValueChange = { if (it.isEmpty() || it.toDoubleOrNull() != null) cost = it },
-                label = { Text(stringResource(R.string.itinerary_activity_cost)) },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                leadingIcon = { Icon(Icons.Default.Payments, null) },
-                shape = RoundedCornerShape(12.dp)
-            )
+        OutlinedTextField(
+            value = cost,
+            onValueChange = { if (it.isEmpty() || it.toDoubleOrNull() != null) cost = it },
+            label = { Text(stringResource(R.string.itinerary_activity_cost)) },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            leadingIcon = { Icon(Icons.Default.Payments, null) },
+            shape = RoundedCornerShape(12.dp)
+        )
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)) {
-                    Text(stringResource(R.string.cancel))
-                }
-                Button(
-                    onClick = {
-                        var hasError = false
-                        if (title.isBlank()) { titleError = true; hasError = true }
-                        if (description.isBlank()) { descriptionError = true; hasError = true }
-                        if (!hasError) {
-                            onSave(activity.copy(title = title, description = description, time = selectedTime, location = location.ifBlank { null }, cost = cost.toDoubleOrNull()))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)) {
+                Text(stringResource(R.string.cancel))
+            }
+            Button(
+                onClick = {
+                    var hasError = false
+                    if (title.isBlank()) { titleError = true; hasError = true }
+                    if (description.isBlank()) { descriptionError = true; hasError = true }
+                    if (!hasError) {
+                        val activity = if (isEditMode && initialActivity != null) {
+                            initialActivity.copy(
+                                title = title,
+                                description = description,
+                                time = selectedTime,
+                                location = location.ifBlank { null },
+                                cost = cost.toDoubleOrNull()
+                            )
+                        } else {
+                            ItineraryItem(
+                                id = UUID.randomUUID().toString(),
+                                tripId = "",
+                                dayId = "",
+                                title = title,
+                                description = description,
+                                date = LocalDate.now(),
+                                time = selectedTime,
+                                location = location.ifBlank { null },
+                                cost = cost.toDoubleOrNull()
+                            )
                         }
-                    },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(Icons.Default.Save, null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.save))
-                }
+                        onConfirm(activity)
+                    }
+                },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(if (isEditMode) Icons.Default.Save else Icons.Default.Check, null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(if (isEditMode) R.string.save else R.string.add))
             }
         }
     }
