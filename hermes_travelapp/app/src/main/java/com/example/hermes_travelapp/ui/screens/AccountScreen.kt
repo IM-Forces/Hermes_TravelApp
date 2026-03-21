@@ -94,7 +94,6 @@ fun AccountScreenContent(
                         val date = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate()
                         onUpdateBirthDate(date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
                     }
-                    showDatePicker = false
                 }) {
                     Text(stringResource(R.string.ok))
                 }

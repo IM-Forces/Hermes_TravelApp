@@ -1,6 +1,5 @@
 package com.example.hermes_travelapp.ui.screens
 
-import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -11,10 +10,12 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
@@ -24,10 +25,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hermes_travelapp.R
@@ -41,6 +43,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import java.util.UUID
 
 data class TripDayInfo(
     val id: String,
@@ -48,21 +51,24 @@ data class TripDayInfo(
     val date: String,
     val fullDate: LocalDate,
     val dayOfWeek: String,
-    val subtitle: String,
     val activitiesCount: Int,
     val budget: String
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DayItineraryScreen(
     tripId: String = "grecia_trip",
     dayId: String = "day1",
-    tripViewModel: TripViewModel = viewModel(),
+    tripViewModel: TripViewModel,
     activityViewModel: ActivityViewModel = viewModel(),
-    tripDayViewModel: TripDayViewModel = viewModel(),
-    onBack: () -> Unit = {},
-    onNavigateToEditActivity: (activityId: String) -> Unit = {}
+    tripDayViewModel: TripDayViewModel,
+    onBack: () -> Unit = {}
 ) {
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    
     val allTrips by tripViewModel.trips.collectAsState()
     val trip = allTrips.find { it.id == tripId }
     
@@ -81,9 +87,8 @@ fun DayItineraryScreen(
                 date = domainDay.date.format(dateFormatter),
                 fullDate = domainDay.date,
                 dayOfWeek = domainDay.date.format(dayOfWeekFormatter).replaceFirstChar { it.uppercase() },
-                subtitle = domainDay.subtitle,
                 activitiesCount = 0,
-                budget = "€0" 
+                budget = "€0"
             )
         }
     }
@@ -106,6 +111,15 @@ fun DayItineraryScreen(
     
     val pagerState = rememberPagerState(initialPage = initialPageIndex) { uiDays.size }
     
+    var showAddSheet by remember { mutableStateOf(false) }
+    var showEditSheet by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var activityToEdit by remember { mutableStateOf<ItineraryItem?>(null) }
+    var activityToDelete by remember { mutableStateOf<ItineraryItem?>(null) }
+    
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val editSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
     LaunchedEffect(tripId, uiDays) {
         if (uiDays.isNotEmpty()) {
             activityViewModel.loadAllDayCounts(tripId, uiDays.map { it.id })
@@ -124,40 +138,11 @@ fun DayItineraryScreen(
         "€${total.toInt()}"
     }
 
-    DayItineraryContent(
-        tripTitle = trip?.title ?: stringResource(R.string.itinerary_title),
-        uiDays = uiDays,
-        dayCounts = dayCounts,
-        pagerState = pagerState,
-        activities = activities,
-        currentDayBudget = currentDayBudget,
-        onBack = onBack,
-        onAddActivity = { },
-        onEditActivity = onNavigateToEditActivity,
-        onDeleteActivity = { }
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DayItineraryContent(
-    tripTitle: String,
-    uiDays: List<TripDayInfo>,
-    dayCounts: Map<String, Int>,
-    pagerState: PagerState,
-    activities: List<ItineraryItem>,
-    currentDayBudget: String,
-    onBack: () -> Unit,
-    onAddActivity: () -> Unit,
-    onEditActivity: (String) -> Unit,
-    onDeleteActivity: (ItineraryItem) -> Unit
-) {
-    val scope = rememberCoroutineScope()
-
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text(tripTitle, fontWeight = FontWeight.Bold) },
+                title = { Text(trip?.title ?: stringResource(R.string.itinerary_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
@@ -171,12 +156,12 @@ fun DayItineraryContent(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = onAddActivity,
+                onClick = { showAddSheet = true },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = CircleShape
             ) {
-                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(32.dp))
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.itinerary_add_activity_cd), modifier = Modifier.size(32.dp))
             }
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -205,11 +190,81 @@ fun DayItineraryContent(
                 DayContent(
                     day = day.copy(budget = if(pageIndex == pagerState.currentPage) currentDayBudget else day.budget),
                     activities = if(pageIndex == pagerState.currentPage) activities else emptyList(),
-                    onEdit = onEditActivity,
-                    onDelete = onDeleteActivity,
-                    onAddFirst = onAddActivity
+                    onEdit = { id ->
+                        activityToEdit = activities.find { it.id == id }
+                        showEditSheet = true
+                    },
+                    onDelete = { activity ->
+                        activityToDelete = activity
+                        showDeleteDialog = true
+                    },
+                    onAddFirst = { showAddSheet = true }
                 )
             }
+        }
+
+        if (showAddSheet) {
+            AddActivityBottomSheet(
+                onDismiss = { showAddSheet = false },
+                onAdd = { newItem ->
+                    val currentDay = uiDays[pagerState.currentPage]
+                    val activityWithContext = newItem.copy(
+                        tripId = tripId,
+                        dayId = currentDay.id,
+                        date = currentDay.fullDate
+                    )
+                    activityViewModel.addActivity(activityWithContext)
+                    showAddSheet = false
+                    val msg = context.getString(R.string.itinerary_activity_added, newItem.title)
+                    scope.launch { snackbarHostState.showSnackbar(msg) }
+                },
+                sheetState = sheetState
+            )
+        }
+
+        if (showEditSheet && activityToEdit != null) {
+            EditActivityBottomSheet(
+                activity = activityToEdit!!,
+                onDismiss = { 
+                    showEditSheet = false
+                    activityToEdit = null
+                },
+                onSave = { updatedItem ->
+                    activityViewModel.updateActivity(updatedItem)
+                    showEditSheet = false
+                    activityToEdit = null
+                    val msg = context.getString(R.string.itinerary_activity_updated, updatedItem.title)
+                    scope.launch { snackbarHostState.showSnackbar(msg) }
+                },
+                sheetState = editSheetState
+            )
+        }
+
+        if (showDeleteDialog && activityToDelete != null) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                title = { Text(stringResource(R.string.itinerary_delete_activity)) },
+                text = { Text(stringResource(R.string.itinerary_delete_msg, activityToDelete?.title ?: "")) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            val activity = activityToDelete
+                            if (activity != null) {
+                                activityViewModel.deleteActivity(activity.id, tripId, activity.dayId)
+                                showDeleteDialog = false
+                                scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.itinerary_activity_deleted)) }
+                            }
+                        }
+                    ) {
+                        Text(stringResource(R.string.itinerary_delete_confirm), color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteDialog = false }) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                }
+            )
         }
     }
 }
@@ -311,12 +366,6 @@ fun DayContent(
                     color = DoradoAtenea,
                     fontWeight = FontWeight.Bold
                 )
-                Text(
-                    text = day.subtitle.ifBlank { stringResource(R.string.itinerary_no_activities) },
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -331,9 +380,7 @@ fun DayContent(
         }
 
         if (activities.isEmpty()) {
-            item {
-                EmptyActivitiesState(onAddFirst)
-            }
+            item { EmptyActivitiesState(onAddFirst) }
         } else {
             items(activities) { activity ->
                 ActivityTimelineItem(
@@ -370,19 +417,9 @@ fun ActivityTimelineItem(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.width(48.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(12.dp)
-                    .background(DoradoAtenea, CircleShape)
-                    .border(3.dp, DoradoAtenea.copy(alpha = 0.2f), CircleShape)
-            )
+            Box(modifier = Modifier.size(12.dp).background(DoradoAtenea, CircleShape).border(3.dp, DoradoAtenea.copy(alpha = 0.2f), CircleShape))
             if (!isLast) {
-                Box(
-                    modifier = Modifier
-                        .width(2.dp)
-                        .height(130.dp)
-                        .background(DoradoAtenea.copy(alpha = 0.3f))
-                )
+                Box(modifier = Modifier.width(2.dp).height(130.dp).background(DoradoAtenea.copy(alpha = 0.3f)))
             }
         }
 
@@ -404,22 +441,37 @@ fun ActivityTimelineItem(
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.ExtraBold
                     )
+                    
+                    var showMenu by remember { mutableStateOf(false) }
+                    Box {
+                        IconButton(onClick = { showMenu = true }, modifier = Modifier.size(24.dp)) {
+                            Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.itinerary_options), tint = Color.Gray)
+                        }
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false },
+                            modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.edit)) },
+                                onClick = { showMenu = false; onEdit() },
+                                leadingIcon = { Icon(Icons.Default.Edit, null, tint = MaterialTheme.colorScheme.primary) }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.delete)) },
+                                onClick = { showMenu = false; onDelete() },
+                                leadingIcon = { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error) },
+                                colors = MenuDefaults.itemColors(textColor = MaterialTheme.colorScheme.error)
+                            )
+                        }
+                    }
                 }
                 
-                Text(
-                    text = activity.title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                )
+                Text(text = activity.title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 4.dp))
                 
                 if (activity.description.isNotBlank()) {
-                    Text(
-                        text = activity.description,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        maxLines = 2
-                    )
+                    Text(text = activity.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), maxLines = 2)
                 }
                 
                 Row(
@@ -428,17 +480,12 @@ fun ActivityTimelineItem(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(14.dp), tint = TerracotaSuave)
+                        Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(14.dp), tint = TerracotaSuave)
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(activity.location ?: stringResource(R.string.itinerary_no_location), style = MaterialTheme.typography.labelMedium, color = Color.Gray)
                     }
                     if (activity.cost != null) {
-                        Text(
-                            text = "€${activity.cost.toInt()}",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = DoradoAtenea
-                        )
+                        Text(text = "€${activity.cost.toInt()}", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = DoradoAtenea)
                     }
                 }
             }
@@ -449,85 +496,267 @@ fun ActivityTimelineItem(
 @Composable
 fun EmptyActivitiesState(onAddFirst: () -> Unit) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 64.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 64.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            Icons.Default.EventBusy,
-            contentDescription = null,
-            modifier = Modifier.size(80.dp),
-            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-        )
+        Icon(Icons.Default.EventBusy, null, modifier = Modifier.size(80.dp), tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
         Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = stringResource(R.string.itinerary_no_activities),
-            style = MaterialTheme.typography.titleMedium,
-            color = Color.Gray,
-            textAlign = TextAlign.Center
-        )
+        Text(text = stringResource(R.string.itinerary_no_activities), style = MaterialTheme.typography.titleMedium, color = Color.Gray, textAlign = TextAlign.Center)
         Spacer(modifier = Modifier.height(24.dp))
-        Button(
-            onClick = onAddFirst,
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Icon(Icons.Default.Add, contentDescription = null)
+        Button(onClick = onAddFirst, shape = RoundedCornerShape(12.dp)) {
+            Icon(Icons.Default.Add, null)
             Spacer(modifier = Modifier.width(8.dp))
             Text(stringResource(R.string.itinerary_add_first_activity))
         }
     }
 }
 
-@Preview(name = "Light Mode", showBackground = true)
-@Preview(name = "Dark Mode", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DayItineraryPreview() {
-    val sampleDays = listOf(
-        TripDayInfo("1", 1, "15 Jul", LocalDate.now(), "Lun", "Llegada a Atenas", 2, "€50"),
-        TripDayInfo("2", 2, "16 Jul", LocalDate.now().plusDays(1), "Mar", "Acrópolis", 4, "€120")
-    )
-    
-    val sampleActivities = listOf(
-        ItineraryItem(
-            id = "1",
-            tripId = "t1",
-            dayId = "1",
-            title = "Visita al Partenón",
-            description = "Tour guiado por la Acrópolis de Atenas.",
-            date = LocalDate.now(),
-            time = LocalTime.of(9, 0),
-            location = "Atenas, Grecia",
-            cost = 20.0
-        ),
-        ItineraryItem(
-            id = "2",
-            tripId = "t1",
-            dayId = "1",
-            title = "Comida en Plaka",
-            description = "Degustación de comida típica griega.",
-            date = LocalDate.now(),
-            time = LocalTime.of(13, 30),
-            location = "Barrio de Plaka",
-            cost = 30.0
-        )
-    )
-    
-    val pagerState = rememberPagerState(initialPage = 0) { sampleDays.size }
+fun AddActivityBottomSheet(
+    onDismiss: () -> Unit,
+    onAdd: (ItineraryItem) -> Unit,
+    sheetState: SheetState
+) {
+    var title by remember { mutableStateOf("") }
+    var titleError by remember { mutableStateOf(false) }
+    var location by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var descriptionError by remember { mutableStateOf(false) }
+    var cost by remember { mutableStateOf("") }
+    var selectedTime by remember { mutableStateOf(LocalTime.now()) }
+    var showTimePicker by remember { mutableStateOf(false) }
 
-    Hermes_travelappTheme {
-        DayItineraryContent(
-            tripTitle = "Viaje a Grecia",
-            uiDays = sampleDays,
-            dayCounts = mapOf("1" to 2, "2" to 4),
-            pagerState = pagerState,
-            activities = sampleActivities,
-            currentDayBudget = "€50",
-            onBack = {},
-            onAddActivity = {},
-            onEditActivity = {},
-            onDeleteActivity = {}
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        dragHandle = { BottomSheetDefaults.DragHandle() },
+        containerColor = MaterialTheme.colorScheme.surface,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 32.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(stringResource(R.string.itinerary_new_activity), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+
+            OutlinedTextField(
+                value = title,
+                onValueChange = { title = it; if (it.isNotBlank()) titleError = false },
+                label = { Text(stringResource(R.string.itinerary_activity_title)) },
+                modifier = Modifier.fillMaxWidth(),
+                isError = titleError,
+                supportingText = { if (titleError) Text(stringResource(R.string.itinerary_activity_title_err)) },
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            OutlinedTextField(
+                value = selectedTime.format(DateTimeFormatter.ofPattern("HH:mm")),
+                onValueChange = {},
+                label = { Text(stringResource(R.string.itinerary_activity_time)) },
+                modifier = Modifier.fillMaxWidth().clickable { showTimePicker = true },
+                enabled = false,
+                readOnly = true,
+                leadingIcon = { Icon(Icons.Default.AccessTime, null) },
+                colors = OutlinedTextFieldDefaults.colors(
+                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                    disabledBorderColor = MaterialTheme.colorScheme.outline,
+                    disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                ),
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            OutlinedTextField(
+                value = location,
+                onValueChange = { location = it },
+                label = { Text(stringResource(R.string.itinerary_activity_location)) },
+                modifier = Modifier.fillMaxWidth(),
+                leadingIcon = { Icon(Icons.Default.LocationOn, null) },
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            OutlinedTextField(
+                value = description,
+                onValueChange = { description = it; if (it.isNotBlank()) descriptionError = false },
+                label = { Text(stringResource(R.string.itinerary_activity_desc)) },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 3,
+                isError = descriptionError,
+                supportingText = { if (descriptionError) Text(stringResource(R.string.itinerary_activity_desc_err)) },
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            OutlinedTextField(
+                value = cost,
+                onValueChange = { if (it.isEmpty() || it.toDoubleOrNull() != null) cost = it },
+                label = { Text(stringResource(R.string.itinerary_activity_cost)) },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                leadingIcon = { Icon(Icons.Default.Payments, null) },
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)) {
+                    Text(stringResource(R.string.cancel))
+                }
+                Button(
+                    onClick = {
+                        var hasError = false
+                        if (title.isBlank()) { titleError = true; hasError = true }
+                        if (description.isBlank()) { descriptionError = true; hasError = true }
+                        if (!hasError) {
+                            onAdd(ItineraryItem(UUID.randomUUID().toString(), "", "", title, description, LocalDate.now(), selectedTime, location.ifBlank { null }, cost.toDoubleOrNull()))
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(Icons.Default.Check, null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.add))
+                }
+            }
+        }
+    }
+
+    if (showTimePicker) {
+        val timePickerState = rememberTimePickerState(initialHour = selectedTime.hour, initialMinute = selectedTime.minute, is24Hour = true)
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            confirmButton = { TextButton(onClick = { selectedTime = LocalTime.of(timePickerState.hour, timePickerState.minute); showTimePicker = false }) { Text(stringResource(R.string.ok)) } },
+            dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text(stringResource(R.string.cancel)) } },
+            text = { TimePicker(state = timePickerState) }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditActivityBottomSheet(
+    activity: ItineraryItem,
+    onDismiss: () -> Unit,
+    onSave: (ItineraryItem) -> Unit,
+    sheetState: SheetState
+) {
+    var title by remember { mutableStateOf(activity.title) }
+    var titleError by remember { mutableStateOf(false) }
+    var location by remember { mutableStateOf(activity.location ?: "") }
+    var description by remember { mutableStateOf(activity.description) }
+    var descriptionError by remember { mutableStateOf(false) }
+    var cost by remember { mutableStateOf(activity.cost?.toString() ?: "") }
+    var selectedTime by remember { mutableStateOf(activity.time) }
+    var showTimePicker by remember { mutableStateOf(false) }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        dragHandle = { BottomSheetDefaults.DragHandle() },
+        containerColor = MaterialTheme.colorScheme.surface,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 32.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(stringResource(R.string.itinerary_edit_activity), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+
+            OutlinedTextField(
+                value = title,
+                onValueChange = { title = it; if (it.isNotBlank()) titleError = false },
+                label = { Text(stringResource(R.string.itinerary_activity_title)) },
+                modifier = Modifier.fillMaxWidth(),
+                isError = titleError,
+                supportingText = { if (titleError) Text(stringResource(R.string.itinerary_activity_title_err)) },
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            OutlinedTextField(
+                value = selectedTime.format(DateTimeFormatter.ofPattern("HH:mm")),
+                onValueChange = {},
+                label = { Text(stringResource(R.string.itinerary_activity_time)) },
+                modifier = Modifier.fillMaxWidth().clickable { showTimePicker = true },
+                enabled = false,
+                readOnly = true,
+                leadingIcon = { Icon(Icons.Default.AccessTime, null) },
+                colors = OutlinedTextFieldDefaults.colors(
+                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                    disabledBorderColor = MaterialTheme.colorScheme.outline,
+                    disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                ),
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            OutlinedTextField(
+                value = location,
+                onValueChange = { location = it },
+                label = { Text(stringResource(R.string.itinerary_activity_location)) },
+                modifier = Modifier.fillMaxWidth(),
+                leadingIcon = { Icon(Icons.Default.LocationOn, null) },
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            OutlinedTextField(
+                value = description,
+                onValueChange = { description = it; if (it.isNotBlank()) descriptionError = false },
+                label = { Text(stringResource(R.string.itinerary_activity_desc)) },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 3,
+                isError = descriptionError,
+                supportingText = { if (descriptionError) Text(stringResource(R.string.itinerary_activity_desc_err)) },
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            OutlinedTextField(
+                value = cost,
+                onValueChange = { if (it.isEmpty() || it.toDoubleOrNull() != null) cost = it },
+                label = { Text(stringResource(R.string.itinerary_activity_cost)) },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                leadingIcon = { Icon(Icons.Default.Payments, null) },
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)) {
+                    Text(stringResource(R.string.cancel))
+                }
+                Button(
+                    onClick = {
+                        var hasError = false
+                        if (title.isBlank()) { titleError = true; hasError = true }
+                        if (description.isBlank()) { descriptionError = true; hasError = true }
+                        if (!hasError) {
+                            onSave(activity.copy(title = title, description = description, time = selectedTime, location = location.ifBlank { null }, cost = cost.toDoubleOrNull()))
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(Icons.Default.Save, null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.save))
+                }
+            }
+        }
+    }
+
+    if (showTimePicker) {
+        val timePickerState = rememberTimePickerState(initialHour = selectedTime.hour, initialMinute = selectedTime.minute, is24Hour = true)
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            confirmButton = { TextButton(onClick = { selectedTime = LocalTime.of(timePickerState.hour, timePickerState.minute); showTimePicker = false }) { Text(stringResource(R.string.ok)) } },
+            dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text(stringResource(R.string.cancel)) } },
+            text = { TimePicker(state = timePickerState) }
         )
     }
 }

@@ -50,4 +50,13 @@ object FakeTripDayDataSource {
             Log.d(TAG, "Cleared all days for trip: $tripId")
         }
     }
+
+    fun getLastDayForTrip(tripId: String): TripDay? {
+        return days.filter { it.tripId == tripId }.maxByOrNull { it.dayNumber }
+    }
+
+    fun deleteDay(dayId: String) {
+        days.removeIf { it.id == dayId }
+        Log.d(TAG, "Deleted day with ID: $dayId")
+    }
 }

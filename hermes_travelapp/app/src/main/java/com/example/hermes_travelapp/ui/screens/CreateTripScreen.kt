@@ -60,6 +60,8 @@ fun CreateTripScreenContent(
 
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
+    var showDateChangeWarning by remember { mutableStateOf(false) }
+    var pendingTrip by remember { mutableStateOf<Trip?>(null) }
 
     if (errorMessage != null) {
         AlertDialog(
@@ -71,6 +73,31 @@ fun CreateTripScreenContent(
             },
             title = { Text("Error", fontWeight = FontWeight.Bold) },
             text = { Text(errorMessage) }
+        )
+    }
+
+    if (showDateChangeWarning && pendingTrip != null) {
+        AlertDialog(
+            onDismissRequest = { showDateChangeWarning = false },
+            title = { Text(stringResource(R.string.trip_date_change_title), fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(R.string.trip_date_change_msg)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDateChangeWarning = false
+                    onSaveTrip(pendingTrip!!)
+                    pendingTrip = null
+                }) {
+                    Text(stringResource(R.string.trip_date_change_confirm), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showDateChangeWarning = false
+                    pendingTrip = null
+                }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
         )
     }
 
@@ -195,7 +222,14 @@ fun CreateTripScreenContent(
                             budget = budget.toIntOrNull() ?: 0,
                             description = description
                         )
-                        onSaveTrip(trip)
+                        val datesChanged = tripToEdit != null &&
+                                (startDate != tripToEdit.startDate || endDate != tripToEdit.endDate)
+                        if (datesChanged) {
+                            pendingTrip = trip
+                            showDateChangeWarning = true
+                        } else {
+                            onSaveTrip(trip)
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),

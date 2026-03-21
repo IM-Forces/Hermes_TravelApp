@@ -29,7 +29,6 @@ import com.example.hermes_travelapp.domain.Trip
 import com.example.hermes_travelapp.domain.generateDaysForTrip
 import com.example.hermes_travelapp.ui.screens.*
 import com.example.hermes_travelapp.ui.viewmodels.*
-import com.example.hermes_travelapp.ui.theme.Hermes_travelappTheme
 
 sealed class BottomNavItem(val route: String, val icon: ImageVector, val labelRes: Int) {
     object Home : BottomNavItem("home", Icons.Default.Home, R.string.nav_home)
@@ -62,7 +61,6 @@ fun NavGraph(
     )
     
     var tripToEdit by remember { mutableStateOf<Trip?>(null) }
-    var selectedTrip by remember { mutableStateOf<Trip?>(null) }
     
     val favoritePlaces = remember { mutableStateListOf<RecommendationItem>() }
 
@@ -104,7 +102,6 @@ fun NavGraph(
                     navController.navigate("createTrip")
                 },
                 onTripClick = { trip ->
-                    selectedTrip = trip
                     navController.navigate("tripOverview/${trip.id}")
                 },
                 favoritePlaces = favoritePlaces,
@@ -139,8 +136,7 @@ fun NavGraph(
                 dayId = dayId,
                 tripViewModel = tripViewModel,
                 tripDayViewModel = tripDayViewModel,
-                onBack = { navController.popBackStack() },
-                onNavigateToEditActivity = { activityId -> /* TODO */ }
+                onBack = { navController.popBackStack() }
             )
         }
 
@@ -148,8 +144,7 @@ fun NavGraph(
             CreateTripScreen(
                 tripToEdit = tripToEdit,
                 tripViewModel = tripViewModel,
-                onBack = { 
-                    tripToEdit = null
+                onBack = {
                     tripViewModel.clearError()
                     navController.popBackStack() 
                 },
@@ -168,7 +163,6 @@ fun NavGraph(
                         edited
                     }
                     if (success) {
-                        tripToEdit = null
                         navController.popBackStack()
                     }
                 }

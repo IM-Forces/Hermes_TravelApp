@@ -24,4 +24,7 @@ interface TripDayRepository {
      * @param tripId The unique identifier of the trip to clear.
      */
     fun clearDaysForTrip(tripId: String)
+
+    fun getLastDayForTrip(tripId: String): TripDay?
+    fun deleteDay(dayId: String)
 }

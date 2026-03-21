@@ -28,7 +28,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hermes_travelapp.R
 import com.example.hermes_travelapp.domain.Trip
 import com.example.hermes_travelapp.ui.theme.*
@@ -42,15 +41,14 @@ data class TripDayUI(
     val date: String,
     val dayOfWeek: String,
     val dayNumber: Int,
-    val location: String,
     val activitiesCount: Int
 )
 
 @Composable
 fun TripOverviewScreen(
     tripId: String,
-    tripViewModel: TripViewModel = viewModel(),
-    tripDayViewModel: TripDayViewModel = viewModel(),
+    tripViewModel: TripViewModel,
+    tripDayViewModel: TripDayViewModel,
     onDayClick: (dayId: String) -> Unit = {},
     onBack: () -> Unit = {}
 ) {
@@ -78,7 +76,6 @@ fun TripOverviewScreen(
             date = domainDay.date.format(dateFormatter),
             dayOfWeek = domainDay.date.format(dayOfWeekFormatter).replaceFirstChar { it.uppercase() },
             dayNumber = domainDay.dayNumber,
-            location = domainDay.subtitle.ifBlank { stringResource(R.string.itinerary_no_desc) },
             activitiesCount = 0
         )
     }
@@ -86,6 +83,16 @@ fun TripOverviewScreen(
     TripOverviewContent(
         trip = trip,
         uiDays = uiDays,
+        onAddDay = {
+            tripDayViewModel.addDay(trip.id) { newEndDate ->
+                tripViewModel.updateTripEndDate(trip.id, newEndDate)
+            }
+        },
+        onDeleteDay = { dayId ->
+            tripDayViewModel.deleteDay(dayId, trip.id, trip.startDate) { newEndDate ->
+                tripViewModel.updateTripEndDate(trip.id, newEndDate)
+            }
+        },
         onDayClick = onDayClick,
         onBack = onBack
     )
@@ -95,9 +102,11 @@ fun TripOverviewScreen(
 fun TripOverviewContent(
     trip: Trip,
     uiDays: List<TripDayUI>,
+    onAddDay: () -> Unit = {},
+    onDeleteDay: (dayId: String) -> Unit = {},
     onDayClick: (dayId: String) -> Unit = {},
     onBack: () -> Unit = {}
-) {
+){
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
@@ -143,7 +152,8 @@ fun TripOverviewContent(
                         day = day,
                         isFirst = index == 0,
                         isLast = index == uiDays.size - 1,
-                        onClick = { onDayClick(day.id) }
+                        onClick = { onDayClick(day.id) },
+                        onDelete = { onDeleteDay(day.id) }
                     )
                 }
             }
@@ -154,7 +164,7 @@ fun TripOverviewContent(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     OutlinedButton(
-                        onClick = { },
+                        onClick = { onAddDay() },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
@@ -207,7 +217,7 @@ fun BudgetOverviewCard(spent: Int, total: Int) {
 }
 
 @Composable
-fun TimelineDayItem(day: TripDayUI, isFirst: Boolean, isLast: Boolean, onClick: () -> Unit) {
+fun TimelineDayItem(day: TripDayUI, isFirst: Boolean, isLast: Boolean, onClick: () -> Unit, onDelete: () -> Unit) {
     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.Top) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(40.dp)) {
             Box(modifier = Modifier.width(2.dp).height(24.dp).background(if (isFirst) Color.Transparent else MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)))
@@ -219,14 +229,34 @@ fun TimelineDayItem(day: TripDayUI, isFirst: Boolean, isLast: Boolean, onClick: 
             Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = stringResource(R.string.itinerary_day, day.dayNumber), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        Text(
+                            text = stringResource(R.string.itinerary_day, day.dayNumber),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = "${day.dayOfWeek}, ${day.date}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                        Text(
+                            text = "${day.dayOfWeek}, ${day.date}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
                     }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = day.location, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
                 }
-                Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+                Row {
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                    )
+                }
             }
         }
     }
@@ -248,9 +278,9 @@ fun TripOverviewPreview() {
     )
     
     val sampleDays = listOf(
-        TripDayUI("1", "15 Jul", "Lun", 1, "Llegada a Atenas", 2),
-        TripDayUI("2", "16 Jul", "Mar", 2, "Acrópolis y Plaka", 4),
-        TripDayUI("3", "17 Jul", "Mie", 3, "Museo Arqueológico", 3)
+        TripDayUI("1", "15 Jul", "Lun", 1, 2),
+        TripDayUI("2", "16 Jul", "Mar", 2, 4),
+        TripDayUI("3", "17 Jul", "Mie", 3, 3)
     )
 
     Hermes_travelappTheme {

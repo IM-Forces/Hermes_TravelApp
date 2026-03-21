@@ -95,12 +95,15 @@
     <string name="itinerary_new_activity">New Activity</string>
     <string name="itinerary_edit_activity">Edit Activity</string>
     <string name="itinerary_activity_title">Activity Title *</string>
+    <string name="itinerary_activity_title_err">Title is required</string>
     <string name="itinerary_activity_desc">Description *</string>
+    <string name="itinerary_activity_desc_err">Description is required</string>
     <string name="itinerary_activity_time">Time *</string>
     <string name="itinerary_activity_location">Location (optional)</string>
     <string name="itinerary_activity_cost">Estimated cost (€)</string>
     <string name="itinerary_delete_activity">Delete activity?</string>
-    <string name="itinerary_delete_confirm">Are you sure you want to delete \'%1$s\' permanently?</string>
+    <string name="itinerary_delete_msg">Are you sure you want to delete \'%1$s\'?</string>
+    <string name="itinerary_delete_confirm">Delete permanently</string>
     <string name="itinerary_activity_added">Activity added: %1$s</string>
     <string name="itinerary_activity_updated">Activity updated: %1$s</string>
     <string name="itinerary_activity_deleted">Activity deleted</string>
@@ -112,7 +115,7 @@
 
     <!-- Home Screen -->
     <string name="home_title">Explore the world</string>
-    <string name="home_loading">Loading destinations...</string>
+    <string name="home_loading">Loading destinations…</string>
     <string name="home_welcome">Hello, %1$s 👋</string>
     <string name="home_free">Free</string>
 
@@ -130,9 +133,9 @@
 
     <!-- Explore Screen -->
     <string name="explore_title">Explore destinations</string>
-    <string name="explore_search_placeholder">Search by name, country, type or price...</string>
+    <string name="explore_search_placeholder">Search by name, country, type or price…</string>
     <string name="explore_no_results">No results found for \"%1$s\"</string>
-    <string name="explore_start_typing">Start typing to discover amazing places...</string>
+    <string name="explore_start_typing">Start typing to discover amazing places…</string>
 
     <!-- Favorites Screen -->
     <string name="favorites_title">My Favorites</string>
@@ -140,7 +143,7 @@
     <string name="favorites_remove">Remove from favorites</string>
 
     <!-- Splash Screen -->
-    <string name="splash_starting">Starting your Journey...</string>
+    <string name="splash_starting">Starting your Journey…</string>
     <string name="splash_hermes">HERMES</string>
     <string name="splash_travel_app">TRAVEL APP</string>
     <string name="splash_version_sprint">v%1$s - Sprint %2$s</string>
@@ -181,4 +184,8 @@
     <string name="ok">OK</string>
     <string name="edit">Edit</string>
     <string name="save">Save</string>
+
+    <string name="trip_date_change_title">Warning</string>
+    <string name="trip_date_change_msg">Changing the dates will regenerate the itinerary and you may lose existing days and activities. Are you sure?</string>
+    <string name="trip_date_change_confirm">Continue</string>
 </resources>

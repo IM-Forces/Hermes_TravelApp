@@ -30,4 +30,13 @@ class TripDayRepositoryImpl : TripDayRepository {
         Log.d(TAG, "clearDaysForTrip: tripId=$tripId")
         FakeTripDayDataSource.clearDaysForTrip(tripId)
     }
+
+    override fun getLastDayForTrip(tripId: String): TripDay? {
+        return FakeTripDayDataSource.getLastDayForTrip(tripId)
+    }
+
+    override fun deleteDay(dayId: String) {
+        Log.d(TAG, "deleteDay: dayId=$dayId")
+        FakeTripDayDataSource.deleteDay(dayId)
+    }
 }

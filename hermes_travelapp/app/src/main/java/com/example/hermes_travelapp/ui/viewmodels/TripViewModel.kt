@@ -72,6 +72,14 @@ class TripViewModel(private val repository: TripRepository) : ViewModel() {
         loadTrips()
     }
 
+    fun updateTripEndDate(tripId: String, newEndDate: String) {
+        val trip = _trips.value.find { it.id == tripId } ?: return
+        val updatedTrip = trip.copy(endDate = newEndDate)
+        repository.editTrip(updatedTrip)
+        loadTrips()
+        Log.d(TAG, "updateTripEndDate: tripId=$tripId newEndDate=$newEndDate")
+    }
+
     /**
      * Clears any active error messages.
      */
