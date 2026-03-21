@@ -1,6 +1,7 @@
 package com.example.hermes_travelapp.ui.screens
 
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -31,6 +32,8 @@ fun CreateTripScreen(
     onBack: () -> Unit = {},
     onSaveTrip: (Trip) -> Unit = {}
 ) {
+    Log.d("Navigation", "AddTripScreen composed")
+
     val errorMessageState = tripViewModel?.errorMessage?.observeAsState()
     val errorMessage = errorMessageState?.value
 

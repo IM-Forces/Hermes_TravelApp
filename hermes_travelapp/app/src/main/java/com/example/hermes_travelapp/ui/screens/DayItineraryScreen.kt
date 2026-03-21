@@ -1,6 +1,7 @@
 package com.example.hermes_travelapp.ui.screens
 
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -67,6 +68,8 @@ fun DayItineraryScreen(
     tripDayViewModel: TripDayViewModel,
     onBack: () -> Unit = {}
 ) {
+    Log.d("Navigation", "ItineraryScreen composed, tripId: $tripId")
+
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }

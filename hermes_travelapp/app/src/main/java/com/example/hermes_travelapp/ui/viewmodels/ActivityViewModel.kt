@@ -66,12 +66,15 @@ class ActivityViewModel : ViewModel() {
      * @param activity The [ItineraryItem] to add.
      */
     fun addActivity(activity: ItineraryItem) {
+        Log.d(TAG, "addActivity called: ${activity.title} on ${activity.date} at ${activity.time}")
+        
         if (!activity.isValid()) {
-            Log.e(TAG, "addActivity: validation failed for activity ${activity.id}")
+            Log.e(TAG, "addActivity: validation failed for activity '${activity.title}' (ID: ${activity.id})")
             return
         }
+        
         repository.addActivity(activity)
-        Log.i(TAG, "addActivity: successfully added ${activity.id}")
+        Log.i(TAG, "addActivity: successfully added activity '${activity.title}' to trip ${activity.tripId}")
         loadActivitiesForDay(activity.tripId, activity.dayId)
     }
 
@@ -80,12 +83,15 @@ class ActivityViewModel : ViewModel() {
      * @param activity The [ItineraryItem] with updated information.
      */
     fun updateActivity(activity: ItineraryItem) {
+        Log.d(TAG, "updateActivity called: ${activity.title}, location: ${activity.location}, cost: ${activity.cost}")
+        
         if (!activity.isValid()) {
-            Log.e(TAG, "updateActivity: validation failed for activity ${activity.id}")
+            Log.e(TAG, "updateActivity: validation failed for activity ID ${activity.id}")
             return
         }
+        
         repository.updateActivity(activity)
-        Log.i(TAG, "updateActivity: successfully updated ${activity.id}")
+        Log.i(TAG, "updateActivity: successfully updated activity '${activity.title}' (ID: ${activity.id})")
         loadActivitiesForDay(activity.tripId, activity.dayId)
     }
 
@@ -96,6 +102,7 @@ class ActivityViewModel : ViewModel() {
      * @param dayId The day ID to reload the correct day.
      */
     fun deleteActivity(activityId: String, tripId: String, dayId: String) {
+        Log.d(TAG, "deleteActivity called for ID: $activityId")
         repository.deleteActivity(activityId)
         Log.i(TAG, "deleteActivity: successfully deleted $activityId")
         loadActivitiesForDay(tripId, dayId)

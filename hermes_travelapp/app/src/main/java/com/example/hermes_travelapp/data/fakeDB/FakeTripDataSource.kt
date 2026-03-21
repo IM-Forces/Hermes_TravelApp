@@ -13,36 +13,43 @@ object FakeTripDataSource {
     private val _trips = mutableListOf<Trip>()
 
     init {
-        // La lista comienza vacía.
-        Log.d(TAG, "Initialized with 0 trips.")
+        Log.d(TAG, "Initializing FakeTripDataSource: Starting with 0 trips.")
     }
 
     /**
      * Returns all trips in the list.
      */
     fun getTrips(): List<Trip> {
-        Log.d(TAG, "Fetching all trips. Total: ${_trips.size}")
-        return _trips.toList()
+        Log.d(TAG, "getTrips called: fetching all stored trips.")
+        val result = _trips.toList()
+        Log.i(TAG, "getTrips: successfully retrieved ${result.size} trips.")
+        return result
     }
 
     /**
      * Adds a new trip to the in-memory list.
      */
     fun addTrip(trip: Trip) {
+        Log.d(TAG, "addTrip called with title: ${trip.title}, id: ${trip.id}")
+        if (_trips.any { it.id == trip.id }) {
+            Log.e(TAG, "addTrip failed: trip with id ${trip.id} already exists.")
+            return
+        }
         _trips.add(trip)
-        Log.d(TAG, "Added trip: ${trip.title} (ID: ${trip.id})")
+        Log.i(TAG, "Trip added successfully with id: ${trip.id}")
     }
 
     /**
      * Updates an existing trip by matching its ID.
      */
     fun updateTrip(updatedTrip: Trip) {
+        Log.d(TAG, "updateTrip called for id: ${updatedTrip.id} with title: ${updatedTrip.title}")
         val index = _trips.indexOfFirst { it.id == updatedTrip.id }
         if (index != -1) {
             _trips[index] = updatedTrip
-            Log.d(TAG, "Updated trip: ${updatedTrip.title} (ID: ${updatedTrip.id})")
+            Log.i(TAG, "Trip id: ${updatedTrip.id} updated successfully.")
         } else {
-            Log.w(TAG, "Update failed: Trip with ID ${updatedTrip.id} not found.")
+            Log.e(TAG, "Trip not found for update, id: ${updatedTrip.id}")
         }
     }
 
@@ -50,7 +57,12 @@ object FakeTripDataSource {
      * Deletes a trip from the list by ID.
      */
     fun deleteTrip(tripId: String) {
-        _trips.removeIf { it.id == tripId }
-        Log.d(TAG, "Deleted trip with ID: $tripId")
+        Log.d(TAG, "deleteTrip called for id: $tripId")
+        val removed = _trips.removeIf { it.id == tripId }
+        if (removed) {
+            Log.i(TAG, "Trip id: $tripId deleted successfully.")
+        } else {
+            Log.e(TAG, "Trip not found for deletion, id: $tripId")
+        }
     }
 }
