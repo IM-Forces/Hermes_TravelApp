@@ -364,20 +364,20 @@ Una tarea se considera completada cuando:
 
 ## Timeline del Sprint
 
-**Semana 1 (23 Mar - 29 Mar):**
+**Semana 1 (13 Abr - 19 Abr):**
 - Configurar Firebase y añadir dependencias de Room e Hilt
 - Crear entidades Room (TripEntity, ItineraryItemEntity, UserEntity)
 - Crear DAOs y AppDatabase
 - Implementar LoginScreen y lógica básica de autenticación
 
-**Semana 2 (30 Mar - 05 Abr):**
+**Semana 2 (20 Abr - 26 Abr):**
 - Reemplazar in-memory storage por Room en ViewModels
 - Implementar Registro y verificación de email
 - Implementar ForgotPasswordScreen
 - Implementar tabla de accesos (AccessLogEntity)
 - Filtrar viajes por usuario logado
 
-**Semana 3 (06 Abr - 13 Abr):**
+**Semana 3 (27 Abr - 03 May):**
 - Escribir tests unitarios para DAOs
 - Actualizar design.md con esquema de BD
 - Corregir bugs y pulir navegación
