@@ -1,9 +1,9 @@
 # Sprint 03 - Planning Document
 
 **Project:** Hermes Travel App  
-**Sprint Duration:** 23/03/2026 - 13/04/2026  
+**Sprint Duration:** 13/04/2026 - 03/05/2026  
 **Team:** Ivan Gil Cañizares, Marco Beruet Morelli  
-**Delivery Deadline:** 13/04/2026 23:55
+**Delivery Deadline:** 03/05/2026 23:55
 
 ---
 
