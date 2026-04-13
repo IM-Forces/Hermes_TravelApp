@@ -11,7 +11,9 @@ import com.example.hermes_travelapp.data.PreferencesManager
 import com.example.hermes_travelapp.ui.theme.Hermes_travelappTheme
 import com.example.hermes_travelapp.ui.viewmodels.ThemeViewModel
 import com.example.hermes_travelapp.ui.viewmodels.ViewModelFactory
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
