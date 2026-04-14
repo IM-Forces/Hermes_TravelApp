@@ -2,11 +2,16 @@ package com.example.hermes_travelapp.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import com.example.hermes_travelapp.data.PreferencesManager
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import javax.inject.Inject
 
-class ThemeViewModel(private val preferencesManager: PreferencesManager) : ViewModel() {
+@HiltViewModel
+class ThemeViewModel @Inject constructor(
+    private val preferencesManager: PreferencesManager
+) : ViewModel() {
 
     private val _isDarkMode = MutableStateFlow(preferencesManager.isDarkMode)
     val isDarkMode: StateFlow<Boolean> = _isDarkMode.asStateFlow()

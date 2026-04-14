@@ -6,11 +6,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.*
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.hermes_travelapp.data.PreferencesManager
 import com.example.hermes_travelapp.ui.theme.Hermes_travelappTheme
 import com.example.hermes_travelapp.ui.viewmodels.ThemeViewModel
-import com.example.hermes_travelapp.ui.viewmodels.ViewModelFactory
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -19,16 +18,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        val prefsManager = PreferencesManager(this)
-        // Note: applyLocale is NOT called here to avoid recreation loops.
-        // The locale is handled via attachBaseContext.
-        
         enableEdgeToEdge()
         
         setContent {
-            val themeViewModel: ThemeViewModel = viewModel(
-                factory = ViewModelFactory(preferencesManager = prefsManager)
-            )
+            val themeViewModel: ThemeViewModel = hiltViewModel()
             val isDarkMode by themeViewModel.isDarkMode.collectAsState()
             
             Hermes_travelappTheme(darkTheme = isDarkMode) {

@@ -3,11 +3,17 @@ package com.example.hermes_travelapp.data
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Manager class to handle SharedPreferences for user settings.
  */
-class PreferencesManager(context: Context) {
+@Singleton
+class PreferencesManager @Inject constructor(
+    @ApplicationContext context: Context
+) {
 
     private val sharedPreferences: SharedPreferences =
         context.getSharedPreferences("hermes_prefs", Context.MODE_PRIVATE)
