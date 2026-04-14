@@ -3,14 +3,19 @@ package com.example.hermes_travelapp.ui.viewmodels
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.hermes_travelapp.data.PreferencesManager
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
+import javax.inject.Inject
 
-class AccountViewModel(private val preferencesManager: PreferencesManager) : ViewModel() {
+@HiltViewModel
+class AccountViewModel @Inject constructor(
+    private val preferencesManager: PreferencesManager
+) : ViewModel() {
 
     private val _username = MutableStateFlow(preferencesManager.username)
     val username: StateFlow<String> = _username.asStateFlow()

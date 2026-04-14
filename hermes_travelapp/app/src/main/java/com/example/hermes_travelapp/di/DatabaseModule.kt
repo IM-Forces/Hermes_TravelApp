@@ -1,6 +1,7 @@
 package com.example.hermes_travelapp.di
 
 import android.content.Context
+import androidx.room.Room
 import com.example.hermes_travelapp.data.database.AppDatabase
 import dagger.Module
 import dagger.Provides
@@ -16,6 +17,10 @@ object DatabaseModule {
     @Singleton
     @Provides
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
-        return AppDatabase.getInstance(context)
+        return Room.databaseBuilder(
+            context,
+            AppDatabase::class.java,
+            "hermes_database"
+        ).fallbackToDestructiveMigration().build()
     }
 }
