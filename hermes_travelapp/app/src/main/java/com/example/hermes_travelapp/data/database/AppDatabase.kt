@@ -3,10 +3,21 @@ package com.example.hermes_travelapp.data.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.example.hermes_travelapp.domain.model.Trip
+import com.example.hermes_travelapp.data.database.dao.TripDao
+import com.example.hermes_travelapp.data.database.entities.TripDayEntity
+import com.example.hermes_travelapp.data.database.entities.TripEntity
+import com.example.hermes_travelapp.data.database.entities.UserEntity
 
-@Database(entities = [Trip::class], version = 1, exportSchema = false)
+@Database(
+    entities = [
+        TripEntity::class,
+        TripDayEntity::class,
+        UserEntity::class
+    ],
+    version = 1,
+    exportSchema = false
+)
 @TypeConverters(AppTypeConverters::class)
 abstract class AppDatabase : RoomDatabase() {
-    // DAOs will be added here
+    abstract fun tripDao(): TripDao
 }
