@@ -1,9 +1,7 @@
 package com.example.hermes_travelapp.di
 
 import android.content.Context
-import androidx.room.Room
 import com.example.hermes_travelapp.data.database.AppDatabase
-import com.example.hermes_travelapp.data.database.AppTypeConverters
 import com.example.hermes_travelapp.data.database.dao.TripDao
 import dagger.Module
 import dagger.Provides
@@ -16,29 +14,14 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
 
-    @Singleton
     @Provides
-    fun provideAppTypeConverters(): AppTypeConverters {
-        return AppTypeConverters()
-    }
-
     @Singleton
-    @Provides
-    fun provideAppDatabase(
-        @ApplicationContext context: Context,
-        typeConverters: AppTypeConverters
-    ): AppDatabase {
-        return Room.databaseBuilder(
-            context,
-            AppDatabase::class.java,
-            "hermes_database"
-        )
-        .addTypeConverter(typeConverters)
-        .fallbackToDestructiveMigration()
-        .build()
+    fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
+        return AppDatabase.getInstance(context)
     }
 
     @Provides
+    @Singleton
     fun provideTripDao(database: AppDatabase): TripDao {
         return database.tripDao()
     }

@@ -10,13 +10,22 @@ interface TripDao {
     @Query("SELECT * FROM trips WHERE user_id = :userId")
     fun getTripsByUser(userId: String): Flow<List<TripEntity>>
 
-    @Transaction
     @Query("SELECT * FROM trips WHERE id = :tripId")
-    fun getTripWithDays(tripId: String): Flow<TripWithDays?>
+    suspend fun getTripById(tripId: String): TripEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTrip(trip: TripEntity)
 
+    @Update
+    suspend fun updateTrip(trip: TripEntity)
+
     @Delete
     suspend fun deleteTrip(trip: TripEntity)
+
+    @Query("DELETE FROM trips WHERE id = :tripId")
+    suspend fun deleteTripById(tripId: String)
+
+    @Transaction
+    @Query("SELECT * FROM trips WHERE user_id = :userId")
+    fun getTripsWithDays(userId: String): Flow<List<TripWithDays>>
 }
