@@ -1,0 +1,20 @@
+package com.example.hermes_travelapp.di
+
+import com.example.hermes_travelapp.data.repository.TripRepositoryImpl
+import com.example.hermes_travelapp.domain.repository.TripRepository
+import dagger.Binds
+import dagger.Module
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
+
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class RepositoryModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindTripRepository(
+        tripRepositoryImpl: TripRepositoryImpl
+    ): TripRepository
+}

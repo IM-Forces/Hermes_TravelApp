@@ -2,6 +2,8 @@ package com.example.hermes_travelapp.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.hermes_travelapp.data.database.AppDatabase
 import com.example.hermes_travelapp.data.database.AppTypeConverters
 import com.example.hermes_travelapp.data.database.dao.TripDao
@@ -34,6 +36,15 @@ object DatabaseModule {
             "hermes_database"
         )
             .addTypeConverter(typeConverters)
+            .addCallback(object : RoomDatabase.Callback() {
+                override fun onCreate(db: SupportSQLiteDatabase) {
+                    super.onCreate(db)
+                    db.execSQL(
+                        "INSERT INTO users (id, name, email, profileInitials, activeTripCount, countriesVisited) " +
+                                "VALUES ('default_user', 'Default User', 'default@example.com', 'DU', 0, 0)"
+                    )
+                }
+            })
             .fallbackToDestructiveMigration(false)
         .build()
     }

@@ -4,17 +4,23 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.hermes_travelapp.domain.model.Trip
 import com.example.hermes_travelapp.domain.repository.TripRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import com.example.hermes_travelapp.R
 
-class TripViewModel(private val repository: TripRepository) : ViewModel() {
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
+@HiltViewModel
+class TripViewModel @Inject constructor(private val repository: TripRepository) : ViewModel() {
     
     private companion object {
         const val TAG = "TripViewModel"
@@ -39,10 +45,13 @@ class TripViewModel(private val repository: TripRepository) : ViewModel() {
      */
     fun loadTrips() {
         Log.d(TAG, "loadTrips: initiating trip loading from repository")
-        val result = repository.getTrips()
-        _trips.value = result
-        Log.d(TAG, "Trip list updated, total: ${_trips.value.size}")
-        Log.i(TAG, "loadTrips: successfully loaded ${result.size} trips")
+        viewModelScope.launch {
+            repository.getTrips().collect { result ->
+                _trips.value = result
+                Log.d(TAG, "Trip list updated, total: ${result.size}")
+                Log.i(TAG, "loadTrips: successfully loaded ${result.size} trips")
+            }
+        }
     }
 
     /**
@@ -51,10 +60,11 @@ class TripViewModel(private val repository: TripRepository) : ViewModel() {
     fun addTrip(trip: Trip): Boolean {
         Log.d(TAG, "addTrip: attempting to add trip '${trip.title}'")
         if (validateTrip(trip)) {
-            repository.addTrip(trip)
-            _errorMessageRes.value = null
-            loadTrips()
-            Log.i(TAG, "Trip created successfully: ${trip.title} (id=${trip.id})")
+            viewModelScope.launch {
+                repository.addTrip(trip)
+                _errorMessageRes.value = null
+                Log.i(TAG, "Trip created successfully: ${trip.title} (id=${trip.id})")
+            }
             return true
         }
         return false
@@ -66,10 +76,11 @@ class TripViewModel(private val repository: TripRepository) : ViewModel() {
     fun editTrip(updatedTrip: Trip): Boolean {
         Log.d(TAG, "editTrip: attempting to edit trip id=${updatedTrip.id}")
         if (validateTrip(updatedTrip)) {
-            repository.editTrip(updatedTrip)
-            _errorMessageRes.value = null
-            loadTrips()
-            Log.i(TAG, "Trip updated successfully: ${updatedTrip.title} (id=${updatedTrip.id})")
+            viewModelScope.launch {
+                repository.editTrip(updatedTrip)
+                _errorMessageRes.value = null
+                Log.i(TAG, "Trip updated successfully: ${updatedTrip.title} (id=${updatedTrip.id})")
+            }
             return true
         }
         return false
@@ -77,18 +88,20 @@ class TripViewModel(private val repository: TripRepository) : ViewModel() {
 
     fun deleteTrip(tripId: String) {
         Log.d(TAG, "deleteTrip: attempting to delete trip id=$tripId")
-        repository.deleteTrip(tripId)
-        loadTrips()
-        Log.i(TAG, "Trip deleted successfully: id=$tripId")
+        viewModelScope.launch {
+            repository.deleteTrip(tripId)
+            Log.i(TAG, "Trip deleted successfully: id=$tripId")
+        }
     }
 
     fun updateTripEndDate(tripId: String, newEndDate: String) {
         Log.d(TAG, "updateTripEndDate: updating end date for trip id=$tripId to $newEndDate")
         val trip = _trips.value.find { it.id == tripId } ?: return
         val updatedTrip = trip.copy(endDate = newEndDate)
-        repository.editTrip(updatedTrip)
-        loadTrips()
-        Log.i(TAG, "Trip end date updated successfully for trip id=$tripId")
+        viewModelScope.launch {
+            repository.editTrip(updatedTrip)
+            Log.i(TAG, "Trip end date updated successfully for trip id=$tripId")
+        }
     }
 
     /**

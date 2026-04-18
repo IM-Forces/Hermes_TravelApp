@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -23,7 +24,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.hermes_travelapp.data.PreferencesManager
 import com.example.hermes_travelapp.data.repository.TripDayRepositoryImpl
-import com.example.hermes_travelapp.data.repository.TripRepositoryImpl
 import com.example.hermes_travelapp.domain.model.RecommendationItem
 import com.example.hermes_travelapp.domain.model.Trip
 import com.example.hermes_travelapp.domain.generateDaysForTrip
@@ -46,19 +46,13 @@ fun NavGraph(
     val context = LocalContext.current
     val navController = rememberNavController()
     
-    val preferencesManager = remember { PreferencesManager(context) }
-    val tripRepository = remember { TripRepositoryImpl() }
     val tripDayRepository = remember { TripDayRepositoryImpl() }
     
-    val tripViewModel: TripViewModel = viewModel(
-        factory = ViewModelFactory(tripRepository = tripRepository)
-    )
+    val tripViewModel: TripViewModel = hiltViewModel()
     val tripDayViewModel: TripDayViewModel = viewModel(
         factory = ViewModelFactory(tripDayRepository = tripDayRepository)
     )
-    val accountViewModel: AccountViewModel = viewModel(
-        factory = ViewModelFactory(preferencesManager = preferencesManager)
-    )
+    val accountViewModel: AccountViewModel = hiltViewModel()
     
     var tripToEdit by remember { mutableStateOf<Trip?>(null) }
     
