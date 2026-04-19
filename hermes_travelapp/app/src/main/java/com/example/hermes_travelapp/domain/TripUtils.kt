@@ -12,7 +12,7 @@ import java.util.UUID
  * Generates all [TripDay] entries for a given [Trip] based on its start and end dates.
  * Existing days for the trip are cleared before generation to ensure a clean state.
  */
-fun generateDaysForTrip(trip: Trip, repository: TripDayRepository) {
+suspend fun generateDaysForTrip(trip: Trip, repository: TripDayRepository) {
     repository.clearDaysForTrip(trip.id)
 
     val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")

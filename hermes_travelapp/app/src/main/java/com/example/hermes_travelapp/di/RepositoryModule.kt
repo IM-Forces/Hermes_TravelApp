@@ -1,6 +1,8 @@
 package com.example.hermes_travelapp.di
 
+import com.example.hermes_travelapp.data.repository.TripDayRepositoryImpl
 import com.example.hermes_travelapp.data.repository.TripRepositoryImpl
+import com.example.hermes_travelapp.domain.repository.TripDayRepository
 import com.example.hermes_travelapp.domain.repository.TripRepository
 import dagger.Binds
 import dagger.Module
@@ -17,4 +19,10 @@ abstract class RepositoryModule {
     abstract fun bindTripRepository(
         tripRepositoryImpl: TripRepositoryImpl
     ): TripRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTripDayRepository(
+        tripDayRepositoryImpl: TripDayRepositoryImpl
+    ): TripDayRepository
 }

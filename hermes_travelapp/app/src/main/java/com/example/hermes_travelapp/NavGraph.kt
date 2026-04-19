@@ -11,9 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -22,11 +20,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.hermes_travelapp.data.PreferencesManager
-import com.example.hermes_travelapp.data.repository.TripDayRepositoryImpl
 import com.example.hermes_travelapp.domain.model.RecommendationItem
 import com.example.hermes_travelapp.domain.model.Trip
-import com.example.hermes_travelapp.domain.generateDaysForTrip
 import com.example.hermes_travelapp.ui.screens.*
 import com.example.hermes_travelapp.ui.viewmodels.*
 
@@ -43,15 +38,10 @@ fun NavGraph(
     modifier: Modifier = Modifier,
     themeViewModel: ThemeViewModel
 ) {
-    val context = LocalContext.current
     val navController = rememberNavController()
     
-    val tripDayRepository = remember { TripDayRepositoryImpl() }
-    
     val tripViewModel: TripViewModel = hiltViewModel()
-    val tripDayViewModel: TripDayViewModel = viewModel(
-        factory = ViewModelFactory(tripDayRepository = tripDayRepository)
-    )
+    val tripDayViewModel: TripDayViewModel = hiltViewModel()
     val accountViewModel: AccountViewModel = hiltViewModel()
     
     var tripToEdit by remember { mutableStateOf<Trip?>(null) }
@@ -146,13 +136,13 @@ fun NavGraph(
                     val success = if (tripToEdit == null) {
                         val added = tripViewModel.addTrip(trip)
                         if (added) {
-                            generateDaysForTrip(trip, tripDayRepository)
+                            tripDayViewModel.generateDays(trip)
                         }
                         added
                     } else {
                         val edited = tripViewModel.editTrip(trip)
                         if (edited) {
-                            generateDaysForTrip(trip, tripDayRepository)
+                            tripDayViewModel.generateDays(trip)
                         }
                         edited
                     }
