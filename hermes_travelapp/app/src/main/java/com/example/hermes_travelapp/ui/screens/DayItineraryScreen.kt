@@ -26,7 +26,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -34,7 +36,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hermes_travelapp.R
 import com.example.hermes_travelapp.domain.model.ItineraryItem
 import com.example.hermes_travelapp.ui.theme.*
@@ -143,6 +144,16 @@ fun DayItineraryScreen(
         "€${total.toInt()}"
     }
 
+    val timeRange = remember(activities) {
+        if (activities.isEmpty()) {
+            "00:00 - 00:00"
+        } else {
+            val sortedTimes = activities.map { it.time }.sorted()
+            val formatter = DateTimeFormatter.ofPattern("HH:mm")
+            "${sortedTimes.first().format(formatter)} - ${sortedTimes.last().format(formatter)}"
+        }
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -154,9 +165,21 @@ fun DayItineraryScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                    titleContentColor = MaterialTheme.colorScheme.primary
-                )
+                    containerColor = Color.Transparent,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                    actionIconContentColor = MaterialTheme.colorScheme.onSurface
+                ),
+                modifier = Modifier.drawBehind {
+                    val strokeWidth = 2.dp.toPx()
+                    val y = size.height - strokeWidth / 2
+                    drawLine(
+                        color = DoradoAtenea,
+                        start = androidx.compose.ui.geometry.Offset(0f, y),
+                        end = androidx.compose.ui.geometry.Offset(size.width, y),
+                        strokeWidth = strokeWidth
+                    )
+                }
             )
         },
         floatingActionButton = {
@@ -166,7 +189,11 @@ fun DayItineraryScreen(
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = CircleShape
             ) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.itinerary_add_activity_cd), modifier = Modifier.size(32.dp))
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = stringResource(R.string.itinerary_add_activity_cd),
+                    modifier = Modifier.size(32.dp)
+                )
             }
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -185,6 +212,11 @@ fun DayItineraryScreen(
                 }
             )
 
+            HorizontalDivider(
+                thickness = 0.5.dp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+            )
+
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.weight(1f),
@@ -195,6 +227,7 @@ fun DayItineraryScreen(
                 DayContent(
                     day = day.copy(budget = if(pageIndex == pagerState.currentPage) currentDayBudget else day.budget),
                     activities = if(pageIndex == pagerState.currentPage) activities else emptyList(),
+                    timeRange = if(pageIndex == pagerState.currentPage) timeRange else "00:00 - 00:00",
                     onEdit = { id ->
                         activityToEdit = activities.find { it.id == id }
                         showEditSheet = true
@@ -274,6 +307,8 @@ fun DayItineraryScreen(
     }
 }
 
+
+
 @Composable
 fun DayCarousel(
     days: List<TripDayInfo>,
@@ -292,8 +327,8 @@ fun DayCarousel(
     LazyRow(
         state = listState,
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f))
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth()
     ) {
         items(days.size) { index ->
             val day = days[index]
@@ -310,6 +345,8 @@ fun DayCarousel(
     }
 }
 
+
+
 @Composable
 fun DayChip(
     day: TripDayInfo,
@@ -319,41 +356,32 @@ fun DayChip(
 ) {
     Surface(
         modifier = Modifier
-            .width(85.dp)
             .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
-        border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)),
-        tonalElevation = if (isSelected) 4.dp else 0.dp
+        shape = RoundedCornerShape(24.dp),
+        color = if (isSelected) DoradoAtenea else Color.Transparent,
+        border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant),
     ) {
-        Column(
-            modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Box(
+            modifier = Modifier.padding(vertical = 4.dp, horizontal = 16.dp),
+            contentAlignment = Alignment.Center
         ) {
             Text(
-                text = stringResource(R.string.itinerary_day, day.dayNumber),
-                style = MaterialTheme.typography.labelMedium,
-                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
-            Text(
                 text = day.date,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = stringResource(R.string.itinerary_activities, count),
-                style = MaterialTheme.typography.labelSmall,
-                color = if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                color = if (isSelected) NegroCeramica else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
         }
     }
 }
 
+
+
 @Composable
 fun DayContent(
     day: TripDayInfo,
     activities: List<ItineraryItem>,
+    timeRange: String,
     onEdit: (String) -> Unit,
     onDelete: (ItineraryItem) -> Unit,
     onAddFirst: () -> Unit
@@ -376,7 +404,7 @@ fun DayContent(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    InfoLabel(Icons.Default.Schedule, "09:00 - 22:00")
+                    InfoLabel(Icons.Default.Schedule, timeRange)
                     InfoLabel(Icons.AutoMirrored.Filled.List, stringResource(R.string.itinerary_activities, activities.size))
                     InfoLabel(Icons.Default.Payments, day.budget)
                 }
@@ -402,7 +430,7 @@ fun DayContent(
 }
 
 @Composable
-fun InfoLabel(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
+fun InfoLabel(icon: ImageVector, text: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(icon, contentDescription = null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
         Spacer(modifier = Modifier.width(4.dp))
@@ -431,8 +459,11 @@ fun ActivityTimelineItem(
         Card(
             modifier = Modifier.weight(1f).padding(bottom = 12.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
+            border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f))
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
@@ -497,6 +528,7 @@ fun ActivityTimelineItem(
         }
     }
 }
+
 
 @Composable
 fun EmptyActivitiesState(onAddFirst: () -> Unit) {
@@ -639,7 +671,7 @@ fun ActivityFormContent(
                     if (title.isBlank()) { titleError = true; hasError = true }
                     if (description.isBlank()) { descriptionError = true; hasError = true }
                     if (!hasError) {
-                        val activity = if (isEditMode && initialActivity != null) {
+                        val activity = if (isEditMode) {
                             initialActivity.copy(
                                 title = title,
                                 description = description,
@@ -730,10 +762,32 @@ fun DayItineraryPreview() {
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.secondary,
-                        titleContentColor = MaterialTheme.colorScheme.primary
-                    )
+                        containerColor = Color.Transparent,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                        actionIconContentColor = MaterialTheme.colorScheme.onSurface
+                    ),
+                    modifier = Modifier.drawBehind {
+                        val strokeWidth = 2.dp.toPx()
+                        val y = size.height - strokeWidth / 2
+                        drawLine(
+                            color = DoradoAtenea,
+                            start = androidx.compose.ui.geometry.Offset(0f, y),
+                            end = androidx.compose.ui.geometry.Offset(size.width, y),
+                            strokeWidth = strokeWidth
+                        )
+                    }
                 )
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = { },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    shape = CircleShape
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(32.dp))
+                }
             }
         ) { padding ->
             Column(modifier = Modifier.padding(padding).fillMaxSize().background(MaterialTheme.colorScheme.background)) {
@@ -741,13 +795,14 @@ fun DayItineraryPreview() {
                     days = sampleDays,
                     dayCounts = mapOf("1" to 2, "2" to 0, "3" to 0),
                     selectedPageIndex = 0,
-                    onDayClick = {}
+                    onDayClick = { _ -> }
                 )
                 DayContent(
                     day = sampleDays[0],
                     activities = sampleActivities,
-                    onEdit = {},
-                    onDelete = {},
+                    timeRange = "09:00 - 18:00",
+                    onEdit = { _ -> },
+                    onDelete = { _ -> },
                     onAddFirst = {}
                 )
             }

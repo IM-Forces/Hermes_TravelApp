@@ -1,6 +1,8 @@
 package com.example.hermes_travelapp.ui.screens
 
+import android.content.res.Configuration
 import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -22,11 +24,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hermes_travelapp.R
 import com.example.hermes_travelapp.domain.model.Trip
+import com.example.hermes_travelapp.ui.theme.Hermes_travelappTheme
 import com.example.hermes_travelapp.ui.viewmodels.AccountViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,11 +41,10 @@ fun TripsScreen(
     onEditTripClick: (Trip) -> Unit = {},
     onCreateTripClick: () -> Unit = {},
     onDeleteTripClick: (String) -> Unit = {},
-    accountViewModel: AccountViewModel = viewModel()
+    username: String = "Usuario"
 ) {
     Log.d("Navigation", "TripListScreen composed")
     
-    val username by accountViewModel.username.collectAsState()
     val initials = remember(username) {
         if (username.isBlank()) "U"
         else if (username.length >= 2) username.take(2).uppercase()
@@ -50,79 +53,102 @@ fun TripsScreen(
 
     var showDeleteDialog by remember { mutableStateOf<Trip?>(null) }
 
-    Scaffold(
-        topBar = {
-            MediumTopAppBar(
-                title = { 
-                    Text(
-                        stringResource(R.string.trips_title), 
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(start = 8.dp)
-                    ) 
-                },
-                actions = {
-                    IconButton(onClick = { }) {
-                        Icon(Icons.Default.Notifications, null, tint = MaterialTheme.colorScheme.onTertiary, modifier = Modifier.size(28.dp))
-                    }
-                    Box(
-                        modifier = Modifier
-                            .padding(end = 16.dp)
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(initials, color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                    }
-                },
-                colors = TopAppBarDefaults.mediumTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                    titleContentColor = MaterialTheme.colorScheme.primary
-                )
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onCreateTripClick,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Trip")
-            }
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { paddingValues ->
-        if (trips.isEmpty()) {
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Header estilo pill enriquecido
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
-                Text(
-                    text = stringResource(R.string.trips_empty),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.Gray,
-                    textAlign = TextAlign.Center
-                )
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp), // Coincide con el redondeado de las TripCard
+                    color = MaterialTheme.colorScheme.secondary
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text(
+                                text = "My Trips",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSecondary
+                            )
+                            Text(
+                                text = if (trips.isEmpty()) "Ready for a new adventure?" else "${trips.size} destinations planned",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.7f)
+                            )
+                        }
+                        
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = initials,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                        }
+                    }
+                }
             }
-        } else {
+
+            // Lista de viajes
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
+                modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(trips) { trip ->
-                    TripCard(
-                        trip = trip,
-                        onClick = { onTripClick(trip) },
-                        onEdit = { onEditTripClick(trip) },
-                        onDelete = { showDeleteDialog = trip }
-                    )
+                if (trips.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 64.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = stringResource(R.string.trips_empty),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.Gray,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                } else {
+                    items(trips) { trip ->
+                        TripCard(
+                            trip = trip,
+                            onClick = { onTripClick(trip) },
+                            onEdit = { onEditTripClick(trip) },
+                            onDelete = { showDeleteDialog = trip }
+                        )
+                    }
                 }
             }
+        }
+
+        FloatingActionButton(
+            onClick = onCreateTripClick,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp),
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary
+        ) {
+            Icon(Icons.Default.Add, contentDescription = "Add Trip")
         }
 
         if (showDeleteDialog != null) {
@@ -160,8 +186,11 @@ fun TripCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+        ),
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -198,5 +227,35 @@ fun TripCard(
                 )
             }
         }
+    }
+}
+
+@Preview(name = "Light Mode", showBackground = true)
+@Preview(name = "Dark Mode", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun TripsScreenPreview() {
+    val sampleTrips = listOf(
+        Trip(
+            id = "1",
+            title = "Atenas",
+            emoji = "🏛️",
+            startDate = "20/05/2024",
+            endDate = "25/05/2024",
+            description = "Explorando la ciudad antigua con un toque moderno."
+        ),
+        Trip(
+            id = "2",
+            title = "Santorini",
+            emoji = "🌅",
+            startDate = "26/05/2024",
+            endDate = "30/05/2024",
+            description = "Vistas increíbles y puestas de sol inolvidables."
+        )
+    )
+    Hermes_travelappTheme {
+        TripsScreen(
+            trips = sampleTrips,
+            username = "Marco"
+        )
     }
 }

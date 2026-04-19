@@ -76,7 +76,7 @@ fun AboutScreen(onBack: () -> Unit = {}) {
             )
 
             Text(
-                text = stringResource(R.string.about_version, "1.0.0"),
+                text = stringResource(R.string.about_version, "3.0.0"),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
             )
@@ -103,15 +103,15 @@ fun AboutScreen(onBack: () -> Unit = {}) {
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        TechnicalRow(label = stringResource(R.string.about_app_version), value = "1.0.0")
+                        TechnicalRow(label = stringResource(R.string.about_app_version), value = "3.0.0")
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
-                        TechnicalRow(label = stringResource(R.string.about_sprint), value = "01")
+                        TechnicalRow(label = stringResource(R.string.about_sprint), value = "03")
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
                         TechnicalRow(label = stringResource(R.string.about_android_version), value = Build.VERSION.RELEASE)
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
                         TechnicalRow(label = stringResource(R.string.about_sdk_level), value = Build.VERSION.SDK_INT.toString())
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
-                        TechnicalRow(label = stringResource(R.string.about_environment), value = "Development")
+                        TechnicalRow(label = stringResource(R.string.about_environment), value = "Stable")
                     }
                 }
             }

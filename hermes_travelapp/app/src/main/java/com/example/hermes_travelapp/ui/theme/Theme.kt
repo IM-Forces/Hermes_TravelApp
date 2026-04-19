@@ -21,7 +21,9 @@ private val DarkColorScheme = darkColorScheme(
     onSecondary = BlancoMarmol,
     onTertiary = BlancoMarmol,
     onBackground = BlancoMarmol,
-    onSurface = BlancoMarmol
+    onSurface = BlancoMarmol,
+    surfaceVariant = AzulEgeoSutil,
+    onSurfaceVariant = BlancoMarmol
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -34,7 +36,9 @@ private val LightColorScheme = lightColorScheme(
     onSecondary = NegroCeramica,
     onTertiary = BlancoMarmol,
     onBackground = NegroCeramica,
-    onSurface = NegroCeramica
+    onSurface = NegroCeramica,
+    surfaceVariant = Color(0xFFF0EBE3),
+    onSurfaceVariant = NegroCeramica
 )
 
 @Composable

@@ -1,6 +1,7 @@
 package com.example.hermes_travelapp
 
-import androidx.compose.foundation.layout.padding
+import android.content.res.Configuration
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
@@ -12,6 +13,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.example.hermes_travelapp.ui.theme.Hermes_travelappTheme
+import androidx.compose.foundation.layout.Box
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -203,27 +208,38 @@ fun MainScreen(
 
     Scaffold(
         bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.secondary,
-            ) {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentDestination = navBackStackEntry?.destination
+            Column {
+                HorizontalDivider(
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f)
+                )
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.background,
+                ) {
+                    val navBackStackEntry by navController.currentBackStackEntryAsState()
+                    val currentDestination = navBackStackEntry?.destination
 
-                items.forEach { screen ->
-                    val selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
+                    items.forEach { screen ->
+                        val selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
 
-                    NavigationBarItem(
-                        icon = { Icon(screen.icon, contentDescription = null) },
-                        label = { Text(text = stringResource(screen.labelRes), style = MaterialTheme.typography.labelSmall) },
-                        selected = selected,
-                        onClick = {
-                            navController.navigate(screen.route) {
-                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
+                        NavigationBarItem(
+                            icon = { Icon(screen.icon, contentDescription = null) },
+                            label = { Text(text = stringResource(screen.labelRes), style = MaterialTheme.typography.labelSmall) },
+                            selected = selected,
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.onPrimary,
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                indicatorColor = MaterialTheme.colorScheme.primary
+                            ),
+                            onClick = {
+                                navController.navigate(screen.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }
@@ -242,13 +258,14 @@ fun MainScreen(
             }
             composable(BottomNavItem.Explore.route) { ExploreScreen() }
             composable(BottomNavItem.Trips.route) { 
+                val username by accountViewModel.username.collectAsState()
                 TripsScreen(
                     trips = trips,
                     onTripClick = onTripClick,
                     onEditTripClick = onEditTrip,
                     onCreateTripClick = onCreateTrip,
                     onDeleteTripClick = { id -> tripViewModel.deleteTrip(id) },
-                    accountViewModel = accountViewModel
+                    username = username
                 )
             }
             composable(BottomNavItem.Favorites.route) { 
@@ -267,6 +284,58 @@ fun MainScreen(
                     accountViewModel = accountViewModel,
                     tripViewModel = tripViewModel
                 ) 
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "Light Mode")
+@Preview(showBackground = true, name = "Dark Mode", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun MainScreenPreview() {
+    val items = listOf(
+        BottomNavItem.Home,
+        BottomNavItem.Explore,
+        BottomNavItem.Trips,
+        BottomNavItem.Favorites,
+        BottomNavItem.Profile
+    )
+    
+    Hermes_travelappTheme {
+        Scaffold(
+            bottomBar = {
+                Column {
+                    HorizontalDivider(
+                        thickness = 0.5.dp,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f)
+                    )
+                    NavigationBar(
+                        containerColor = MaterialTheme.colorScheme.background,
+                    ) {
+                        items.forEach { screen ->
+                            NavigationBarItem(
+                                icon = { Icon(screen.icon, contentDescription = null) },
+                                label = { Text(text = stringResource(screen.labelRes), style = MaterialTheme.typography.labelSmall) },
+                                selected = screen == BottomNavItem.Trips,
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = MaterialTheme.colorScheme.onPrimary,
+                                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                                    indicatorColor = MaterialTheme.colorScheme.primary
+                                ),
+                                onClick = { }
+                            )
+                        }
+                    }
+                }
+            }
+        ) { innerPadding ->
+            Box(modifier = Modifier.padding(innerPadding)) {
+                TripsScreen(
+                    trips = listOf(
+                        Trip("1", "Atenas", "🏛️", "20/05/2024", "25/05/2024", "Explorando la ciudad antigua.")
+                    ),
+                    username = "Marco"
+                )
             }
         }
     }
