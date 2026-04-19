@@ -43,6 +43,7 @@ fun NavGraph(
     val tripViewModel: TripViewModel = hiltViewModel()
     val tripDayViewModel: TripDayViewModel = hiltViewModel()
     val accountViewModel: AccountViewModel = hiltViewModel()
+    val activityViewModel: ActivityViewModel = hiltViewModel()
     
     var tripToEdit by remember { mutableStateOf<Trip?>(null) }
     
@@ -120,6 +121,7 @@ fun NavGraph(
                 dayId = dayId,
                 tripViewModel = tripViewModel,
                 tripDayViewModel = tripDayViewModel,
+                activityViewModel = activityViewModel,
                 onBack = { navController.popBackStack() }
             )
         }

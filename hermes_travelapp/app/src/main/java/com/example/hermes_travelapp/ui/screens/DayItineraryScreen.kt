@@ -64,7 +64,7 @@ fun DayItineraryScreen(
     tripId: String = "grecia_trip",
     dayId: String = "day1",
     tripViewModel: TripViewModel,
-    activityViewModel: ActivityViewModel = viewModel(),
+    activityViewModel: ActivityViewModel,
     tripDayViewModel: TripDayViewModel,
     onBack: () -> Unit = {}
 ) {
@@ -127,14 +127,14 @@ fun DayItineraryScreen(
 
     LaunchedEffect(tripId, uiDays) {
         if (uiDays.isNotEmpty()) {
-            activityViewModel.loadAllDayCounts(tripId, uiDays.map { it.id })
+            activityViewModel.loadAllDayCounts(uiDays.map { it.id })
         }
     }
 
     LaunchedEffect(pagerState.currentPage, uiDays) {
         if (uiDays.isNotEmpty()) {
             val currentDayId = uiDays[pagerState.currentPage].id
-            activityViewModel.loadActivitiesForDay(tripId, currentDayId)
+            activityViewModel.loadActivitiesForDay(currentDayId)
         }
     }
 
@@ -255,7 +255,7 @@ fun DayItineraryScreen(
                         onClick = {
                             val activity = activityToDelete
                             if (activity != null) {
-                                activityViewModel.deleteActivity(activity.id, tripId, activity.dayId)
+                                activityViewModel.deleteActivity(activity.id)
                                 showDeleteDialog = false
                                 scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.itinerary_activity_deleted)) }
                             }

@@ -1,43 +1,33 @@
 package com.example.hermes_travelapp.data.repository
 
-import android.util.Log
-import com.example.hermes_travelapp.data.fakeDB.FakeActivityDataSource
-import com.example.hermes_travelapp.domain.repository.ActivityRepository
+import com.example.hermes_travelapp.data.database.dao.ItineraryItemDao
+import com.example.hermes_travelapp.data.database.mapper.toDomain
+import com.example.hermes_travelapp.data.database.mapper.toEntity
 import com.example.hermes_travelapp.domain.model.ItineraryItem
+import com.example.hermes_travelapp.domain.repository.ActivityRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
-/**
- * Implementation of the [ActivityRepository] interface.
- * This class acts as a bridge between the domain layer and the data source,
- * delegating all operations to [FakeActivityDataSource].
- */
-class ActivityRepositoryImpl : ActivityRepository {
+class ActivityRepositoryImpl @Inject constructor(
+    private val itineraryItemDao: ItineraryItemDao
+) : ActivityRepository {
 
-    private companion object {
-        const val TAG = "ActivityRepositoryImpl"
+    override fun getActivitiesForDay(dayId: String): Flow<List<ItineraryItem>> {
+        return itineraryItemDao.getActivitiesForDay(dayId).map { entities ->
+            entities.map { it.toDomain() }
+        }
     }
 
-    override fun getActivitiesForDay(tripId: String, dayId: String): List<ItineraryItem> {
-        Log.d(TAG, "getActivitiesForDay: tripId=$tripId, dayId=$dayId")
-        return FakeActivityDataSource.getActivitiesForDay(tripId, dayId)
+    override suspend fun addActivity(activity: ItineraryItem) {
+        itineraryItemDao.insertActivity(activity.toEntity())
     }
 
-    override fun getActivityById(activityId: String): ItineraryItem? {
-        Log.d(TAG, "getActivityById: activityId=$activityId")
-        return FakeActivityDataSource.getActivityById(activityId)
+    override suspend fun updateActivity(activity: ItineraryItem) {
+        itineraryItemDao.updateActivity(activity.toEntity())
     }
 
-    override fun addActivity(activity: ItineraryItem) {
-        Log.d(TAG, "addActivity: activityId=${activity.id}")
-        FakeActivityDataSource.addActivity(activity)
-    }
-
-    override fun updateActivity(activity: ItineraryItem) {
-        Log.d(TAG, "updateActivity: activityId=${activity.id}")
-        FakeActivityDataSource.updateActivity(activity)
-    }
-
-    override fun deleteActivity(activityId: String) {
-        Log.d(TAG, "deleteActivity: activityId=$activityId")
-        FakeActivityDataSource.deleteActivity(activityId)
+    override suspend fun deleteActivity(activityId: String) {
+        itineraryItemDao.deleteActivityById(activityId)
     }
 }

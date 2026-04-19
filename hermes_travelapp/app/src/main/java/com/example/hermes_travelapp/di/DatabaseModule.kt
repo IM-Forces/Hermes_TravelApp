@@ -8,6 +8,7 @@ import com.example.hermes_travelapp.data.database.AppDatabase
 import com.example.hermes_travelapp.data.database.AppTypeConverters
 import com.example.hermes_travelapp.data.database.dao.TripDao
 import com.example.hermes_travelapp.data.database.dao.TripDayDao
+import com.example.hermes_travelapp.data.database.dao.ItineraryItemDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -60,5 +61,11 @@ object DatabaseModule {
     @Singleton
     fun provideTripDayDao(database: AppDatabase): TripDayDao {
         return database.tripDayDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideItineraryItemDao(database: AppDatabase): ItineraryItemDao {
+        return database.itineraryItemDao()
     }
 }

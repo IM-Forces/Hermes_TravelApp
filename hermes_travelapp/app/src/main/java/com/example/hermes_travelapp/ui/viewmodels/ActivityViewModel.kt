@@ -2,24 +2,30 @@ package com.example.hermes_travelapp.ui.viewmodels
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import com.example.hermes_travelapp.data.repository.ActivityRepositoryImpl
-import com.example.hermes_travelapp.domain.repository.ActivityRepository
+import androidx.lifecycle.viewModelScope
 import com.example.hermes_travelapp.domain.model.ItineraryItem
+import com.example.hermes_travelapp.domain.repository.ActivityRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * ViewModel for managing the state and business logic of activities within a trip.
  * This class follows the MVVM pattern by interacting with the Repository layer.
  */
-class ActivityViewModel : ViewModel() {
+@HiltViewModel
+class ActivityViewModel @Inject constructor(
+    private val repository: ActivityRepository
+) : ViewModel() {
 
     private companion object {
         const val TAG = "ActivityViewModel"
     }
-
-    private val repository: ActivityRepository = ActivityRepositoryImpl()
 
     private val _activities = MutableStateFlow<List<ItineraryItem>>(emptyList())
     /**
@@ -33,36 +39,46 @@ class ActivityViewModel : ViewModel() {
      */
     val dayCounts: StateFlow<Map<String, Int>> = _dayCounts.asStateFlow()
 
+    private var loadActivitiesJob: Job? = null
+
     /**
      * Loads activities for a specific day and updates the [activities] StateFlow.
-     * @param tripId The unique identifier of the trip.
      * @param dayId The identifier of the day within the trip.
      */
-    fun loadActivitiesForDay(tripId: String, dayId: String) {
-        val result = repository.getActivitiesForDay(tripId, dayId)
-        _activities.value = result
-        Log.d(TAG, "loadActivitiesForDay: loaded ${result.size} activities for trip=$tripId, day=$dayId")
-        // Update individual day count as well
-        val currentCounts = _dayCounts.value.toMutableMap()
-        currentCounts[dayId] = result.size
-        _dayCounts.value = currentCounts
+    fun loadActivitiesForDay(dayId: String) {
+        loadActivitiesJob?.cancel()
+        loadActivitiesJob = viewModelScope.launch {
+            repository.getActivitiesForDay(dayId).collect { result ->
+                _activities.value = result
+                Log.d(TAG, "loadActivitiesForDay: collected ${result.size} activities for day=$dayId")
+                
+                // Update individual day count as well
+                val currentCounts = _dayCounts.value.toMutableMap()
+                currentCounts[dayId] = result.size
+                _dayCounts.value = currentCounts
+            }
+        }
     }
 
     /**
      * Loads counts for all days of a trip.
-     * @param tripId The trip ID.
      * @param dayIds List of all day IDs to fetch counts for.
      */
-    fun loadAllDayCounts(tripId: String, dayIds: List<String>) {
-        val counts = dayIds.associateWith { dayId ->
-            repository.getActivitiesForDay(tripId, dayId).size
+    fun loadAllDayCounts(dayIds: List<String>) {
+        viewModelScope.launch {
+            val counts = mutableMapOf<String, Int>()
+            dayIds.forEach { dayId ->
+                // Use first() to get the current list of activities once
+                val currentActivities = repository.getActivitiesForDay(dayId).first()
+                counts[dayId] = currentActivities.size
+            }
+            _dayCounts.value = counts
+            Log.d(TAG, "loadAllDayCounts: loaded counts for ${dayIds.size} days")
         }
-        _dayCounts.value = counts
-        Log.d(TAG, "loadAllDayCounts: loaded counts for ${dayIds.size} days")
     }
 
     /**
-     * Adds a new activity after validation and reloads the daily list.
+     * Adds a new activity after validation.
      * @param activity The [ItineraryItem] to add.
      */
     fun addActivity(activity: ItineraryItem) {
@@ -73,13 +89,14 @@ class ActivityViewModel : ViewModel() {
             return
         }
         
-        repository.addActivity(activity)
-        Log.i(TAG, "addActivity: successfully added activity '${activity.title}' to trip ${activity.tripId}")
-        loadActivitiesForDay(activity.tripId, activity.dayId)
+        viewModelScope.launch {
+            repository.addActivity(activity)
+            Log.i(TAG, "addActivity: successfully added activity '${activity.title}' to trip ${activity.tripId}")
+        }
     }
 
     /**
-     * Updates an existing activity after validation and reloads the daily list.
+     * Updates an existing activity after validation.
      * @param activity The [ItineraryItem] with updated information.
      */
     fun updateActivity(activity: ItineraryItem) {
@@ -90,21 +107,21 @@ class ActivityViewModel : ViewModel() {
             return
         }
         
-        repository.updateActivity(activity)
-        Log.i(TAG, "updateActivity: successfully updated activity '${activity.title}' (ID: ${activity.id})")
-        loadActivitiesForDay(activity.tripId, activity.dayId)
+        viewModelScope.launch {
+            repository.updateActivity(activity)
+            Log.i(TAG, "updateActivity: successfully updated activity '${activity.title}' (ID: ${activity.id})")
+        }
     }
 
     /**
-     * Deletes an activity by ID and reloads the daily list.
+     * Deletes an activity by ID.
      * @param activityId The unique identifier of the activity to delete.
-     * @param tripId The trip ID to reload the correct day.
-     * @param dayId The day ID to reload the correct day.
      */
-    fun deleteActivity(activityId: String, tripId: String, dayId: String) {
+    fun deleteActivity(activityId: String) {
         Log.d(TAG, "deleteActivity called for ID: $activityId")
-        repository.deleteActivity(activityId)
-        Log.i(TAG, "deleteActivity: successfully deleted $activityId")
-        loadActivitiesForDay(tripId, dayId)
+        viewModelScope.launch {
+            repository.deleteActivity(activityId)
+            Log.i(TAG, "deleteActivity: successfully deleted $activityId")
+        }
     }
 }
