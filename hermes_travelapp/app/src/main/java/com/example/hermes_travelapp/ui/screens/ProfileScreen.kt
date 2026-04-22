@@ -41,6 +41,7 @@ fun ProfileScreen(
     onNavigateToAbout: () -> Unit = {},
     onNavigateToPreferences: () -> Unit = {},
     onNavigateToTerms: () -> Unit = {},
+    onLogout: () -> Unit = {},
     accountViewModel: AccountViewModel = viewModel(),
     tripViewModel: TripViewModel = viewModel()
 ) {
@@ -55,7 +56,8 @@ fun ProfileScreen(
         onNavigateToAccount = onNavigateToAccount,
         onNavigateToAbout = onNavigateToAbout,
         onNavigateToPreferences = onNavigateToPreferences,
-        onNavigateToTerms = onNavigateToTerms
+        onNavigateToTerms = onNavigateToTerms,
+        onLogout = onLogout
     )
 }
 
@@ -67,10 +69,11 @@ fun ProfileScreenContent(
     onNavigateToAccount: () -> Unit = {},
     onNavigateToAbout: () -> Unit = {},
     onNavigateToPreferences: () -> Unit = {},
-    onNavigateToTerms: () -> Unit = {}
+    onNavigateToTerms: () -> Unit = {},
+    onLogout: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
-    val initials = if (username.length >= 2) username.take(2).uppercase() else username.uppercase()
+    val initials = if (username.length >= 2) username.take(2).uppercase() else if (username.isNotEmpty()) username.uppercase() else "U"
     
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -182,7 +185,7 @@ fun ProfileScreenContent(
                 Spacer(modifier = Modifier.height(48.dp))
                 
                 OutlinedButton(
-                    onClick = { /* Acción mock */ },
+                    onClick = onLogout,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 32.dp)

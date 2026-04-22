@@ -24,7 +24,10 @@ import com.example.hermes_travelapp.ui.theme.Hermes_travelappTheme
 import kotlinx.coroutines.delay
 
 @Composable
-fun SplashScreen(onNavigateToLogin: () -> Unit) {
+fun SplashScreen(
+    isLoggedIn: Boolean,
+    onNavigate: (String) -> Unit
+) {
     var progress by remember { mutableFloatStateOf(0f) }
 
     LaunchedEffect(Unit) {
@@ -32,7 +35,11 @@ fun SplashScreen(onNavigateToLogin: () -> Unit) {
             delay(30L)
             progress += 0.01f
         }
-        onNavigateToLogin()
+        if (isLoggedIn) {
+            onNavigate("main")
+        } else {
+            onNavigate("login")
+        }
     }
 
     SplashScreenContent(progress = progress)

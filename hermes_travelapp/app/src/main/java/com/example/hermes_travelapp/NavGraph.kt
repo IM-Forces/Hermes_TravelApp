@@ -45,6 +45,7 @@ fun NavGraph(
 ) {
     val navController = rememberNavController()
     
+    val authViewModel: AuthViewModel = hiltViewModel()
     val tripViewModel: TripViewModel = hiltViewModel()
     val tripDayViewModel: TripDayViewModel = hiltViewModel()
     val accountViewModel: AccountViewModel = hiltViewModel()
@@ -56,23 +57,35 @@ fun NavGraph(
 
     NavHost(navController = navController, startDestination = "splash", modifier = modifier) {
         composable("splash") {
-            SplashScreen(onNavigateToLogin = {
-                navController.navigate("login") {
-                    popUpTo("splash") { inclusive = true }
+            SplashScreen(
+                isLoggedIn = authViewModel.isLoggedIn(),
+                onNavigate = { route ->
+                    navController.navigate(route) {
+                        popUpTo("splash") { inclusive = true }
+                    }
                 }
-            })
+            )
         }
 
         composable("login") {
             LoginScreen(
-                onLoginClick = { navController.navigate("main") },
-                onNavigateToRegister = { navController.navigate("register") }
+                onLoginSuccess = { 
+                    navController.navigate("main") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                },
+                onNavigateToRegister = { navController.navigate("register") },
+                authViewModel = authViewModel
             )
         }
 
         composable("register") {
             RegisterScreen(
-                onRegisterClick = { navController.navigate("main") },
+                onRegisterClick = { 
+                    navController.navigate("main") {
+                        popUpTo("register") { inclusive = true }
+                    }
+                },
                 onNavigateToLogin = { navController.navigate("login") }
             )
         }
@@ -82,6 +95,7 @@ fun NavGraph(
                 rootNavController = navController,
                 tripViewModel = tripViewModel,
                 accountViewModel = accountViewModel,
+                authViewModel = authViewModel,
                 themeViewModel = themeViewModel,
                 onEditTrip = { trip ->
                     tripToEdit = trip
@@ -188,6 +202,7 @@ fun MainScreen(
     rootNavController: NavHostController,
     tripViewModel: TripViewModel,
     accountViewModel: AccountViewModel,
+    authViewModel: AuthViewModel,
     themeViewModel: ThemeViewModel,
     onEditTrip: (Trip) -> Unit,
     onCreateTrip: () -> Unit,
@@ -281,6 +296,12 @@ fun MainScreen(
                     onNavigateToAbout = { rootNavController.navigate("about") },
                     onNavigateToPreferences = { rootNavController.navigate("preferences") },
                     onNavigateToTerms = { rootNavController.navigate("terms") },
+                    onLogout = {
+                        authViewModel.signOut()
+                        rootNavController.navigate("login") {
+                            popUpTo("main") { inclusive = true }
+                        }
+                    },
                     accountViewModel = accountViewModel,
                     tripViewModel = tripViewModel
                 ) 
