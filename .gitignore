@@ -14,4 +14,6 @@ Thumbs.db
 
 # --- Logs y Temporales ---
 *.log
-*.temp
+*.tem
+
+google-services.json

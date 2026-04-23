@@ -63,7 +63,7 @@ fun TripsScreen(
             ) {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp), // Coincide con el redondeado de las TripCard
+                    shape = RoundedCornerShape(16.dp),
                     color = MaterialTheme.colorScheme.secondary
                 ) {
                     Row(
@@ -122,7 +122,7 @@ fun TripsScreen(
                             Text(
                                 text = stringResource(R.string.trips_empty),
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = Color.Gray,
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -187,7 +187,8 @@ fun TripCard(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
         ),
         border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -201,7 +202,8 @@ fun TripCard(
                 Text(
                     text = "${trip.emoji} ${trip.title}",
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Row {
                     IconButton(onClick = onEdit) {
@@ -216,13 +218,14 @@ fun TripCard(
             Text(
                 text = "${trip.startDate} - ${trip.endDate}",
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
             if (trip.description.isNotBlank()) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = trip.description,
                     style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                     maxLines = 2
                 )
             }
