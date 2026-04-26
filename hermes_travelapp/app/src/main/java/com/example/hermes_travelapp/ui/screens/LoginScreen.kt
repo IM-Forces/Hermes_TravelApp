@@ -86,26 +86,8 @@ fun LoginScreen(
             )
 
             if (uiState is AuthUiState.Error) {
-                val errorCode = (uiState as AuthUiState.Error).errorCode
-                val errorMessage = when (errorCode) {
-                    "ERROR_INVALID_EMAIL",
-                    "ERROR_WRONG_PASSWORD",
-                    "ERROR_INVALID_CREDENTIAL" -> stringResource(R.string.error_auth_invalid_credentials)
-
-                    "ERROR_USER_NOT_FOUND",
-                    "ERROR_USER_DISABLED" -> stringResource(R.string.error_auth_user_not_found)
-
-                    "ERROR_NETWORK_REQUEST_FAILED" -> stringResource(R.string.error_auth_network_error)
-
-                    "ERROR_TOO_MANY_REQUESTS" -> stringResource(R.string.error_auth_too_many_requests)
-
-                    "ERROR_EMPTY_FIELDS" -> stringResource(R.string.error_auth_empty_fields)  // ← aquí
-
-                    else -> stringResource(R.string.error_auth_unknown)
-                }
-
                 Text(
-                    text = errorMessage,
+                    text = stringResource((uiState as AuthUiState.Error).message),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 8.dp)
