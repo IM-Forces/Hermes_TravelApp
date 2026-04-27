@@ -83,6 +83,15 @@
     <string name="error_validation">Validation Error</string>
     <string name="error_field_required">Field is mandatory</string>
 
+    <string name="error_username_required">Username is required</string>
+    <string name="error_birthdate_required">Date of birth is required</string>
+    <string name="error_email_required">Email is required</string>
+    <string name="error_email_invalid">Enter a valid email address</string>
+    <string name="error_password_required">Password is required</string>
+    <string name="error_password_length">Password must be at least 6 characters</string>
+    <string name="error_confirm_password_required">Please confirm your password</string>
+    <string name="error_password_mismatch">Passwords do not match</string>
+
     <!-- Itinerary -->
     <string name="itinerary_title">Itinerary</string>
     <string name="itinerary_days_remaining">%1$d days left</string>
@@ -124,10 +133,11 @@
     <string name="register_title">Register</string>
     <string name="auth_create_account">Create Account</string>
     <string name="auth_welcome_hermes">Welcome to Hermes</string>
-    <string name="auth_name">Name</string>
-    <string name="auth_surname">Surname</string>
+    <string name="auth_username">Username</string>
+    <string name="auth_dob">Date of birth</string>
     <string name="auth_email">Email</string>
     <string name="auth_password">Password</string>
+    <string name="auth_repeat_password">Repeat Password</string>
     <string name="auth_no_account">Don\'t have an account? Register</string>
     <string name="auth_has_account">Already have an account? Login</string>
 
@@ -196,4 +206,17 @@
     <string name="error_auth_unknown">An unexpected error occurred.</string>
     <string name="error_auth_too_many_requests">Too many attempts. Please try later.</string>
     <string name="error_auth_empty_fields">Please enter both email and password.</string>
+
+    <string name="error_register_failed">Registration failed. Please try again.</string>
+    <string name="register_loading">Creating your account…</string>
+    <string name="register_success">Account created! Please verify your email.</string>
+    <string name="register_verification_sent">A verification email has been sent to your inbox.</string>
+
+    <string name="forgot_password_title">Forgot Password?</string>
+    <string name="forgot_password_subtitle">Enter your email and we will send you a link to reset your password.</string>
+    <string name="forgot_password_email_label">Email</string>
+    <string name="forgot_password_button">Send Reset Email</string>
+    <string name="forgot_password_success">Reset email sent! Check your inbox.</string>
+    <string name="forgot_password_back_to_login">Back to Login</string>
+    <string name="error_forgot_password_failed">Failed to send reset email. Please try again.</string>
 </resources>

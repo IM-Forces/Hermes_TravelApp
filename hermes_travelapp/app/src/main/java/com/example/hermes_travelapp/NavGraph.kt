@@ -75,6 +75,7 @@ fun NavGraph(
                     }
                 },
                 onNavigateToRegister = { navController.navigate("register") },
+                onNavigateToForgotPassword = { navController.navigate("forgotPassword") },
                 authViewModel = authViewModel
             )
         }
@@ -87,6 +88,16 @@ fun NavGraph(
                     }
                 },
                 onNavigateToLogin = { navController.navigate("login") }
+            )
+        }
+
+        composable("forgotPassword") {
+            ForgotPasswordScreen(
+                onNavigateToLogin = {
+                    navController.navigate("login") {
+                        popUpTo("forgotPassword") { inclusive = true }
+                    }
+                }
             )
         }
 

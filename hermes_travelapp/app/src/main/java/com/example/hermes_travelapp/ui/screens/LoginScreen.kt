@@ -19,6 +19,7 @@ import com.example.hermes_travelapp.ui.viewmodels.AuthViewModel
 fun LoginScreen(
     onLoginSuccess: () -> Unit = {},
     onNavigateToRegister: () -> Unit = {},
+    onNavigateToForgotPassword: () -> Unit = {},
     authViewModel: AuthViewModel
 ) {
     var email by remember { mutableStateOf("") }
@@ -97,7 +98,7 @@ fun LoginScreen(
 
                     "ERROR_TOO_MANY_REQUESTS" -> stringResource(R.string.error_auth_too_many_requests)
 
-                    "ERROR_EMPTY_FIELDS" -> stringResource(R.string.error_auth_empty_fields)  // ← aquí
+                    "ERROR_EMPTY_FIELDS" -> stringResource(R.string.error_auth_empty_fields)
 
                     else -> stringResource(R.string.error_auth_unknown)
                 }
@@ -132,7 +133,15 @@ fun LoginScreen(
                 Text(
                     stringResource(R.string.auth_no_account),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.secondary
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            TextButton(onClick = onNavigateToForgotPassword) {
+                Text(
+                    text = stringResource(R.string.forgot_password_title),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }

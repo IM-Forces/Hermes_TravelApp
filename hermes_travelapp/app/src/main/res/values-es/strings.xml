@@ -83,9 +83,18 @@
     <string name="error_validation">Error de Validación</string>
     <string name="error_field_required">El campo es obligatorio</string>
 
+    <string name="error_username_required">El nombre de usuario es obligatorio</string>
+    <string name="error_birthdate_required">La fecha de nacimiento es obligatoria</string>
+    <string name="error_email_required">El correo es obligatorio</string>
+    <string name="error_email_invalid">Introduce un correo válido</string>
+    <string name="error_password_required">La contraseña es obligatoria</string>
+    <string name="error_password_length">La contraseña debe tener al menos 6 caracteres</string>
+    <string name="error_confirm_password_required">Por favor confirma tu contraseña</string>
+    <string name="error_password_mismatch">Las contraseñas no coinciden</string>
+
     <!-- Itinerary -->
     <string name="itinerary_title">Itinerario</string>
-    <string name="itinerary_days_remaining">Faltan %1$d días</string>
+    <string name="itinerary_days_remaining">Falten %1$d días</string>
     <string name="itinerary_day">Día %1$d</string>
     <string name="itinerary_no_days">No hay días generados para este viaje.</string>
     <string name="itinerary_add_day">Añadir día</string>
@@ -124,10 +133,11 @@
     <string name="register_title">Registrarse</string>
     <string name="auth_create_account">Crear cuenta</string>
     <string name="auth_welcome_hermes">Bienvenido a Hermes</string>
-    <string name="auth_name">Nombre</string>
-    <string name="auth_surname">Apellido</string>
+    <string name="auth_username">Nombre de usuario</string>
+    <string name="auth_dob">Fecha de nacimiento</string>
     <string name="auth_email">Correo electrónico</string>
     <string name="auth_password">Contraseña</string>
+    <string name="auth_repeat_password">Repetir contraseña</string>
     <string name="auth_no_account">¿No tienes cuenta? Regístrate</string>
     <string name="auth_has_account">¿Ya tienes cuenta? Inicia sesión</string>
 
@@ -197,4 +207,16 @@
     <string name="error_auth_too_many_requests">Has realizado demasiados intentos. Inténtalo de nuevo más tarde.</string>
     <string name="error_auth_empty_fields">Por favor, introduce el correo y la contraseña.</string>
 
+    <string name="error_register_failed">El registro ha fallado. Por favor inténtalo de nuevo.</string>
+    <string name="register_loading">Creando tu cuenta…</string>
+    <string name="register_success">¡Cuenta creada! Por favor verifica tu correo.</string>
+    <string name="register_verification_sent">Se ha enviado un correo de verificación a tu bandeja de entrada.</string>
+
+    <string name="forgot_password_title">¿Olvidaste tu contraseña?</string>
+    <string name="forgot_password_subtitle">Introduce tu correo y te enviaremos un enlace para restablecer tu contraseña.</string>
+    <string name="forgot_password_email_label">Correo electrónico</string>
+    <string name="forgot_password_button">Enviar correo de recuperación</string>
+    <string name="forgot_password_success">¡Correo enviado! Revisa tu bandeja de entrada.</string>
+    <string name="forgot_password_back_to_login">Volver al inicio de sesión</string>
+    <string name="error_forgot_password_failed">No se pudo enviar el correo. Por favor inténtalo de nuevo.</string>
 </resources>

@@ -31,4 +31,29 @@ interface AuthRepository {
      * @return The user ID as a [String], or null if no user is authenticated.
      */
     fun getCurrentUserId(): String?
+
+    /**
+     * Registers a new user with the provided details.
+     */
+    suspend fun register(
+        email: String,
+        password: String,
+        username: String,
+        birthDate: String
+    ): Result<Unit>
+
+    /**
+     * Sends a verification email to the currently authenticated user.
+     */
+    suspend fun sendEmailVerification(): Result<Unit>
+
+    /**
+     * Checks if the current user's email is verified.
+     */
+    suspend fun isEmailVerified(): Boolean
+
+    /**
+     * Sends a password reset email to the provided email address.
+     */
+    suspend fun sendPasswordResetEmail(email: String): Result<Unit>
 }
