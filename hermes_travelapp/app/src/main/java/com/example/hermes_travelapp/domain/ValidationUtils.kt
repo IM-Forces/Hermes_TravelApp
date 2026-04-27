@@ -1,5 +1,6 @@
 package com.example.hermes_travelapp.domain
 
+import android.util.Patterns
 import com.example.hermes_travelapp.domain.model.Trip
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -7,6 +8,13 @@ import java.time.format.DateTimeParseException
 
 object ValidationUtils {
     private val DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+
+    /**
+     * Valida si un email tiene un formato correcto.
+     */
+    fun isValidEmail(email: String): Boolean {
+        return email.isNotBlank() && Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
 
     /**
      * Valida los campos obligatorios de un viaje.
