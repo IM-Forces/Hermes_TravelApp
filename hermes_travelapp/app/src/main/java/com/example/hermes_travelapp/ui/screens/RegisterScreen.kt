@@ -233,8 +233,33 @@ fun RegisterScreen(
                     )
 
                     if (uiState is AuthUiState.Error) {
+                        val errorCode = (uiState as AuthUiState.Error).errorCode
+                        val errorMessage = when (errorCode) {
+                            "ERROR_INVALID_EMAIL",
+                            "ERROR_WRONG_PASSWORD",
+                            "ERROR_INVALID_CREDENTIAL" -> stringResource(R.string.error_auth_invalid_credentials)
+
+                            "ERROR_USER_NOT_FOUND",
+                            "ERROR_USER_DISABLED" -> stringResource(R.string.error_auth_user_not_found)
+
+                            "ERROR_NETWORK_REQUEST_FAILED" -> stringResource(R.string.error_auth_network_error)
+
+                            "ERROR_TOO_MANY_REQUESTS" -> stringResource(R.string.error_auth_too_many_requests)
+
+                            "ERROR_EMPTY_FIELDS" -> stringResource(R.string.error_auth_empty_fields)
+
+                            "ERROR_EMPTY_USERNAME" -> stringResource(R.string.error_username_required)
+                            "ERROR_WEAK_PASSWORD" -> stringResource(R.string.error_password_length)
+                            "ERROR_EMPTY_PASSWORD" -> stringResource(R.string.error_password_required)
+                            "ERROR_EMPTY_CONFIRM_PASSWORD" -> stringResource(R.string.error_confirm_password_required)
+                            "ERROR_PASSWORD_MISMATCH" -> stringResource(R.string.error_password_mismatch)
+                            "ERROR_EMAIL_ALREADY_IN_USE" -> "Email already in use"
+
+                            else -> stringResource(R.string.error_auth_unknown)
+                        }
+
                         Text(
-                            text = stringResource((uiState as AuthUiState.Error).message),
+                            text = errorMessage,
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(top = 8.dp)

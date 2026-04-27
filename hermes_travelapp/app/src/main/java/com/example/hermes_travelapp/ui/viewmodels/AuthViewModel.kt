@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.hermes_travelapp.R
 import com.example.hermes_travelapp.domain.repository.AuthRepository
+import com.google.firebase.auth.FirebaseAuthException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,7 +43,6 @@ class AuthViewModel @Inject constructor(
         password: String,
         confirmPassword: String
     ) {
-        // Run existing validation first
         usernameError = if (username.isBlank()) R.string.error_username_required else null
         emailError = when {
             email.isBlank() -> R.string.error_email_required
@@ -85,8 +85,9 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             authRepository.register(email, password, username, birthDate)
                 .onSuccess { _uiState.value = AuthUiState.Success }
-                .onFailure { 
-                    _uiState.value = AuthUiState.Error(R.string.error_register_failed) 
+                .onFailure { error ->
+                    val errorCode = (error as? FirebaseAuthException)?.errorCode ?: "ERROR_UNKNOWN"
+                    _uiState.value = AuthUiState.Error(R.string.error_register_failed, errorCode) 
                 }
         }
     }
@@ -104,8 +105,9 @@ class AuthViewModel @Inject constructor(
                 onSuccess = {
                     _uiState.value = AuthUiState.Success
                 },
-                onFailure = { 
-                    _uiState.value = AuthUiState.Error(R.string.error_auth_invalid_credentials, "ERROR_INVALID_CREDENTIALS")
+                onFailure = { error ->
+                    val errorCode = (error as? FirebaseAuthException)?.errorCode ?: "ERROR_INVALID_CREDENTIALS"
+                    _uiState.value = AuthUiState.Error(R.string.error_auth_invalid_credentials, errorCode)
                 }
             )
         }
@@ -113,11 +115,11 @@ class AuthViewModel @Inject constructor(
 
     fun forgotPassword(email: String) {
         if (email.isBlank()) {
-            _uiState.value = AuthUiState.Error(R.string.error_email_required)
+            _uiState.value = AuthUiState.Error(R.string.error_email_required, "ERROR_EMPTY_EMAIL")
             return
         }
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            _uiState.value = AuthUiState.Error(R.string.error_email_invalid)
+            _uiState.value = AuthUiState.Error(R.string.error_email_invalid, "ERROR_INVALID_EMAIL")
             return
         }
         _uiState.value = AuthUiState.Loading
@@ -126,9 +128,9 @@ class AuthViewModel @Inject constructor(
                 .onSuccess {
                     _uiState.value = AuthUiState.Success
                 }
-                .onFailure {
-                    _uiState.value = 
-                        AuthUiState.Error(R.string.error_forgot_password_failed)
+                .onFailure { error ->
+                    val errorCode = (error as? FirebaseAuthException)?.errorCode ?: "ERROR_UNKNOWN"
+                    _uiState.value = AuthUiState.Error(R.string.error_forgot_password_failed, errorCode)
                 }
         }
     }

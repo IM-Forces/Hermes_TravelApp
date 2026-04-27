@@ -98,8 +98,17 @@ fun ForgotPasswordScreen(
             )
 
             if (uiState is AuthUiState.Error) {
+                val errorCode = (uiState as AuthUiState.Error).errorCode
+                val errorMessage = when (errorCode) {
+                    "ERROR_INVALID_EMAIL" -> stringResource(R.string.error_email_invalid)
+                    "ERROR_USER_NOT_FOUND" -> stringResource(R.string.error_auth_user_not_found)
+                    "ERROR_EMPTY_EMAIL" -> stringResource(R.string.error_email_required)
+                    "ERROR_NETWORK_REQUEST_FAILED" -> stringResource(R.string.error_auth_network_error)
+                    else -> stringResource(R.string.error_auth_unknown)
+                }
+
                 Text(
-                    text = stringResource((uiState as AuthUiState.Error).message),
+                    text = errorMessage,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 8.dp)
