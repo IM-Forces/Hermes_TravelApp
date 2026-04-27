@@ -57,23 +57,11 @@ fun RegisterScreen(
     var showDatePicker by remember { mutableStateOf(false) }
 
     val uiState by viewModel.uiState.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(uiState) {
-        when (uiState) {
-            is AuthUiState.Success -> {
-                viewModel.resetState()
-                onRegisterClick()
-            }
-            is AuthUiState.Error -> {
-                snackbarHostState.showSnackbar(
-                    message = "Error validation" // Temporary while we use the ID
-                )
-                // Note: The instruction said use stringResource(uiState.message), 
-                // but LaunchedEffect is not a Composable context.
-                // We will handle the message display inside the Scaffold below for correctness.
-            }
-            else -> Unit
+        if (uiState is AuthUiState.Success) {
+            viewModel.resetState()
+            onRegisterClick()
         }
     }
 
@@ -86,6 +74,7 @@ fun RegisterScreen(
                     datePickerState.selectedDateMillis?.let { millis ->
                         val date = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate()
                         birthDate = date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                        viewModel.resetState()
                     }
                     showDatePicker = false
                 }) {
@@ -102,89 +91,78 @@ fun RegisterScreen(
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { paddingValues ->
-        // Reaction to Error within Composable context to use stringResource
-        if (uiState is AuthUiState.Error) {
-            val errorMessage = stringResource((uiState as AuthUiState.Error).message)
-            LaunchedEffect(uiState) {
-                snackbarHostState.showSnackbar(errorMessage)
-                viewModel.resetState()
-            }
-        }
-
-        Surface(
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
-            color = MaterialTheme.colorScheme.background
+                .verticalScroll(rememberScrollState())
         ) {
-            Column(
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                    MaterialTheme.colorScheme.background
-                                )
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                MaterialTheme.colorScheme.background
                             )
                         )
-                        .padding(top = 48.dp, bottom = 32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Image(
-                            painter = painterResource(id = R.drawable.logofinal),
-                            contentDescription = stringResource(R.string.app_name),
-                            modifier = Modifier.size(120.dp),
-                            contentScale = ContentScale.Fit
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = stringResource(R.string.auth_create_account),
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                    )
+                    .padding(top = 48.dp, bottom = 32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Image(
+                        painter = painterResource(id = R.drawable.logofinal),
+                        contentDescription = stringResource(R.string.app_name),
+                        modifier = Modifier.size(120.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = stringResource(R.string.auth_create_account),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
+            }
 
-                Column(
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                OutlinedTextField(
+                    value = username,
+                    onValueChange = { username = it; viewModel.resetState() },
+                    label = { Text(stringResource(R.string.auth_username)) },
+                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    OutlinedTextField(
-                        value = username,
-                        onValueChange = { username = it },
-                        label = { Text(stringResource(R.string.auth_username)) },
-                        leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 6.dp),
-                        shape = RoundedCornerShape(12.dp)
-                    )
+                        .padding(vertical = 6.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = uiState !is AuthUiState.Loading
+                )
 
-                    Box(modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 6.dp)) {
-                        OutlinedTextField(
-                            value = birthDate,
-                            onValueChange = { },
-                            label = { Text(stringResource(R.string.auth_dob)) },
-                            leadingIcon = { Icon(Icons.Default.CalendarMonth, contentDescription = null) },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            readOnly = true
-                        )
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 6.dp)) {
+                    OutlinedTextField(
+                        value = birthDate,
+                        onValueChange = { },
+                        label = { Text(stringResource(R.string.auth_dob)) },
+                        leadingIcon = { Icon(Icons.Default.CalendarMonth, contentDescription = null) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        readOnly = true,
+                        enabled = uiState !is AuthUiState.Loading
+                    )
+                    if (uiState !is AuthUiState.Loading) {
                         Box(
                             modifier = Modifier
                                 .matchParentSize()
@@ -192,57 +170,77 @@ fun RegisterScreen(
                                 .clickable { showDatePicker = true }
                         )
                     }
+                }
 
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text(stringResource(R.string.auth_email)) },
-                        leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it; viewModel.resetState() },
+                    label = { Text(stringResource(R.string.auth_email)) },
+                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    enabled = uiState !is AuthUiState.Loading
+                )
+
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it; viewModel.resetState() },
+                    label = { Text(stringResource(R.string.auth_password)) },
+                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                    trailingIcon = {
+                        val icon = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(icon, contentDescription = null)
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    enabled = uiState !is AuthUiState.Loading
+                )
+
+                OutlinedTextField(
+                    value = repeatPassword,
+                    onValueChange = { repeatPassword = it; viewModel.resetState() },
+                    label = { Text(stringResource(R.string.auth_repeat_password)) },
+                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                    trailingIcon = {
+                        val icon = if (repeatPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                        IconButton(onClick = { repeatPasswordVisible = !repeatPasswordVisible }) {
+                            Icon(icon, contentDescription = null)
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    visualTransformation = if (repeatPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    enabled = uiState !is AuthUiState.Loading
+                )
+
+                if (uiState is AuthUiState.Error) {
+                    Text(
+                        text = stringResource((uiState as AuthUiState.Error).message),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 6.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                            .padding(top = 8.dp, start = 8.dp)
                     )
+                }
 
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        label = { Text(stringResource(R.string.auth_password)) },
-                        leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-                        trailingIcon = {
-                            val icon = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
-                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                Icon(icon, contentDescription = null)
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 6.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-                    )
+                Spacer(modifier = Modifier.height(24.dp))
 
-                    OutlinedTextField(
-                        value = repeatPassword,
-                        onValueChange = { repeatPassword = it },
-                        label = { Text(stringResource(R.string.auth_repeat_password)) },
-                        leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-                        trailingIcon = {
-                            val icon = if (repeatPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
-                            IconButton(onClick = { repeatPasswordVisible = !repeatPasswordVisible }) {
-                                Icon(icon, contentDescription = null)
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 6.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        visualTransformation = if (repeatPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-                    )
-
+                if (uiState is AuthUiState.Loading) {
+                    CircularProgressIndicator()
+                } else {
                     Button(
                         onClick = {
                             viewModel.register(
@@ -255,7 +253,6 @@ fun RegisterScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 24.dp)
                             .height(56.dp),
                         shape = RoundedCornerShape(12.dp)
                     ) {
@@ -265,19 +262,19 @@ fun RegisterScreen(
                             fontWeight = FontWeight.Bold
                         )
                     }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    TextButton(onClick = onNavigateToLogin) {
-                        Text(
-                            text = stringResource(R.string.auth_has_account),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.secondary
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(32.dp))
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                TextButton(onClick = onNavigateToLogin, enabled = uiState !is AuthUiState.Loading) {
+                    Text(
+                        text = stringResource(R.string.auth_has_account),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }
