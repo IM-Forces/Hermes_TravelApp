@@ -211,4 +211,12 @@
     <string name="register_loading">Creando tu cuenta…</string>
     <string name="register_success">¡Cuenta creada! Por favor verifica tu correo.</string>
     <string name="register_verification_sent">Se ha enviado un correo de verificación a tu bandeja de entrada.</string>
+
+    <string name="forgot_password_title">¿Olvidaste tu contraseña?</string>
+    <string name="forgot_password_subtitle">Introduce tu correo y te enviaremos un enlace para restablecer tu contraseña.</string>
+    <string name="forgot_password_email_label">Correo electrónico</string>
+    <string name="forgot_password_button">Enviar correo de recuperación</string>
+    <string name="forgot_password_success">¡Correo enviado! Revisa tu bandeja de entrada.</string>
+    <string name="forgot_password_back_to_login">Volver al inicio de sesión</string>
+    <string name="error_forgot_password_failed">No se pudo enviar el correo. Por favor inténtalo de nuevo.</string>
 </resources>

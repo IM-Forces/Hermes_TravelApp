@@ -90,7 +90,7 @@
     <string name="error_password_required">La contrasenya és obligatòria</string>
     <string name="error_password_length">La contrasenya ha de tenir almenys 6 caràcters</string>
     <string name="error_confirm_password_required">Si us plau confirma la teva contrasenya</string>
-    <string name="error_password_mismatch">Les contrasenyes no coinciden</string>
+    <string name="error_password_mismatch">Les contrasenyes no coincideixen</string>
 
     <!-- Itinerary -->
     <string name="itinerary_title">Itinerari</string>
@@ -168,7 +168,7 @@
     <string name="about_sprint">Sprint</string>
     <string name="about_android_version">Versió d\'Android</string>
     <string name="about_sdk_level">Nivell de SDK</string>
-    <string name="about_environment">Entorno</string>
+    <string name="about_environment">Entorn</string>
     <string name="about_env_dev">Desenvolupament</string>
     <string name="about_team">El nostre Equip</string>
     <string name="about_copyright">© 2025 Hermes Travel Co. \nFet amb ❤️ per a viatgers.</string>
@@ -211,4 +211,12 @@
     <string name="register_loading">Creant el teu compte…</string>
     <string name="register_success">Compte creat! Si us plau verifica el teu correu.</string>
     <string name="register_verification_sent">S\'ha enviat un correu de verificació a la teva bústia.</string>
+
+    <string name="forgot_password_title">Has oblidat la contrasenya?</string>
+    <string name="forgot_password_subtitle">Introdueix el teu correu i t\'enviarem un enllaç per restablir la contrasenya.</string>
+    <string name="forgot_password_email_label">Correu electrònic</string>
+    <string name="forgot_password_button">Enviar correu de recuperació</string>
+    <string name="forgot_password_success">Correu enviat! Revisa la teva bústia d\'entrada.</string>
+    <string name="forgot_password_back_to_login">Tornar a l\'inici de sessió</string>
+    <string name="error_forgot_password_failed">No s\'ha pogut enviar el correu. Si us plau torna-ho a intentar.</string>
 </resources>

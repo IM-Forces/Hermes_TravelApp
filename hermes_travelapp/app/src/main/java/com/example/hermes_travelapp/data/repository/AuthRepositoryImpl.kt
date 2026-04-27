@@ -81,4 +81,15 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun isEmailVerified(): Boolean {
         return firebaseAuth.currentUser?.isEmailVerified ?: false
     }
+
+    override suspend fun sendPasswordResetEmail(email: String): Result<Unit> {
+        return try {
+            firebaseAuth.sendPasswordResetEmail(email).await()
+            Log.d(TAG, "sendPasswordResetEmail: email sent to $email")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "sendPasswordResetEmail: failed - ${e.message}")
+            Result.failure(e)
+        }
+    }
 }

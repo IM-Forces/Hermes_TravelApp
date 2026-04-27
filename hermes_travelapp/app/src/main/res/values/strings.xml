@@ -211,4 +211,12 @@
     <string name="register_loading">Creating your account…</string>
     <string name="register_success">Account created! Please verify your email.</string>
     <string name="register_verification_sent">A verification email has been sent to your inbox.</string>
+
+    <string name="forgot_password_title">Forgot Password?</string>
+    <string name="forgot_password_subtitle">Enter your email and we will send you a link to reset your password.</string>
+    <string name="forgot_password_email_label">Email</string>
+    <string name="forgot_password_button">Send Reset Email</string>
+    <string name="forgot_password_success">Reset email sent! Check your inbox.</string>
+    <string name="forgot_password_back_to_login">Back to Login</string>
+    <string name="error_forgot_password_failed">Failed to send reset email. Please try again.</string>
 </resources>

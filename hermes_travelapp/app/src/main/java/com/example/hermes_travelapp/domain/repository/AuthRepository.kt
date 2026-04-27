@@ -51,4 +51,9 @@ interface AuthRepository {
      * Checks if the current user's email is verified.
      */
     suspend fun isEmailVerified(): Boolean
+
+    /**
+     * Sends a password reset email to the provided email address.
+     */
+    suspend fun sendPasswordResetEmail(email: String): Result<Unit>
 }

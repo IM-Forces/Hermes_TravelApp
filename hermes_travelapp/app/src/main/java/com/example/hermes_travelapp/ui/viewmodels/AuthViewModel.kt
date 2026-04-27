@@ -111,6 +111,28 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun forgotPassword(email: String) {
+        if (email.isBlank()) {
+            _uiState.value = AuthUiState.Error(R.string.error_email_required)
+            return
+        }
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            _uiState.value = AuthUiState.Error(R.string.error_email_invalid)
+            return
+        }
+        _uiState.value = AuthUiState.Loading
+        viewModelScope.launch {
+            authRepository.sendPasswordResetEmail(email)
+                .onSuccess {
+                    _uiState.value = AuthUiState.Success
+                }
+                .onFailure {
+                    _uiState.value = 
+                        AuthUiState.Error(R.string.error_forgot_password_failed)
+                }
+        }
+    }
+
     fun signOut() {
         authRepository.signOut()
         _uiState.value = AuthUiState.Idle
