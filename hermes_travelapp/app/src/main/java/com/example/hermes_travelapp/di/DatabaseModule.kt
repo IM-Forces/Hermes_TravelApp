@@ -6,6 +6,7 @@ import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.hermes_travelapp.data.database.AppDatabase
 import com.example.hermes_travelapp.data.database.AppTypeConverters
+import com.example.hermes_travelapp.data.database.dao.AccessLogDao
 import com.example.hermes_travelapp.data.database.dao.TripDao
 import com.example.hermes_travelapp.data.database.dao.TripDayDao
 import com.example.hermes_travelapp.data.database.dao.ItineraryItemDao
@@ -74,5 +75,11 @@ object DatabaseModule {
     @Singleton
     fun provideUserDao(database: AppDatabase): UserDao {
         return database.userDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAccessLogDao(database: AppDatabase): AccessLogDao {
+        return database.accessLogDao()
     }
 }
