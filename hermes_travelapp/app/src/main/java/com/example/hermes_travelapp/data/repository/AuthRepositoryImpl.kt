@@ -1,6 +1,8 @@
 package com.example.hermes_travelapp.data.repository
 
 import android.util.Log
+import com.example.hermes_travelapp.data.database.dao.AccessLogDao
+import com.example.hermes_travelapp.data.database.entities.AccessLogEntity
 import com.example.hermes_travelapp.data.database.entities.UserEntity
 import com.example.hermes_travelapp.domain.repository.AuthRepository
 import com.example.hermes_travelapp.domain.repository.UserRepository
@@ -8,13 +10,15 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.tasks.await
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val accessLogDao: AccessLogDao
 ) : AuthRepository {
 
     private val TAG = "AuthRepository"
@@ -24,6 +28,17 @@ class AuthRepositoryImpl @Inject constructor(
             Log.d(TAG, "Attempting to sign in with email: $email")
             firebaseAuth.signInWithEmailAndPassword(email, password).await()
             Log.i(TAG, "Successfully signed in user: ${firebaseAuth.currentUser?.uid}")
+            
+            val uid = firebaseAuth.currentUser?.uid ?: return Result.success(Unit)
+            accessLogDao.insertLog(
+                AccessLogEntity(
+                    id = UUID.randomUUID().toString(),
+                    userId = uid,
+                    datetime = System.currentTimeMillis(),
+                    type = "IN"
+                )
+            )
+            
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e(TAG, "Sign in failed for email $email: ${e.message}", e)
@@ -32,8 +47,22 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override fun signOut() {
-        val userId = firebaseAuth.currentUser?.uid
-        Log.d(TAG, "Signing out user: $userId")
+        val uid = firebaseAuth.currentUser?.uid
+        Log.d(TAG, "Signing out user: $uid")
+        
+        if (uid != null) {
+            kotlinx.coroutines.runBlocking {
+                accessLogDao.insertLog(
+                    AccessLogEntity(
+                        id = UUID.randomUUID().toString(),
+                        userId = uid,
+                        datetime = System.currentTimeMillis(),
+                        type = "OUT"
+                    )
+                )
+            }
+        }
+        
         firebaseAuth.signOut()
         Log.i(TAG, "Successfully signed out")
     }
@@ -100,6 +129,16 @@ class AuthRepositoryImpl @Inject constructor(
 
             val roomResult = userRepository.createUser(userEntity)
             Log.i(TAG, "Room registration result for ${userEntity.id}: $roomResult")
+
+            // Log access as user is automatically signed in after registration
+            accessLogDao.insertLog(
+                AccessLogEntity(
+                    id = UUID.randomUUID().toString(),
+                    userId = firebaseUser.uid,
+                    datetime = System.currentTimeMillis(),
+                    type = "IN"
+                )
+            )
 
             sendEmailVerification()
             Result.success(Unit)
