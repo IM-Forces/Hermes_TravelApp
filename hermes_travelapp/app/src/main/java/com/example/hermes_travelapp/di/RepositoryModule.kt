@@ -14,7 +14,7 @@ import com.example.hermes_travelapp.domain.repository.TripRepository
 import com.example.hermes_travelapp.domain.repository.UserRepository
 import dagger.Binds
 import dagger.Module
-import dagger.InstallIn
+import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
