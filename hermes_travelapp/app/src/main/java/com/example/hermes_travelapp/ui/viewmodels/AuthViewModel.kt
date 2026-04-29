@@ -72,7 +72,7 @@ class AuthViewModel @Inject constructor(
                 passwordError == R.string.error_password_required -> "ERROR_EMPTY_PASSWORD"
                 passwordError == R.string.error_password_length -> "ERROR_WEAK_PASSWORD"
                 confirmPasswordError == R.string.error_confirm_password_required -> "ERROR_EMPTY_CONFIRM_PASSWORD"
-                confirmPasswordError == R.string.password_mismatch -> "ERROR_PASSWORD_MISMATCH"
+                confirmPasswordError == R.string.error_password_mismatch -> "ERROR_PASSWORD_MISMATCH"
                 else -> null
             }
 

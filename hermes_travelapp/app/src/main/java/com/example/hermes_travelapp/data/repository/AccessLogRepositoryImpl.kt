@@ -3,6 +3,7 @@ package com.example.hermes_travelapp.data.repository
 import com.example.hermes_travelapp.data.database.dao.AccessLogDao
 import com.example.hermes_travelapp.data.database.entities.AccessLogEntity
 import com.example.hermes_travelapp.domain.repository.AccessLogRepository
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -19,7 +20,7 @@ class AccessLogRepositoryImpl @Inject constructor(
         accessLogDao.insertLog(log)
     }
 
-    override suspend fun getLogsByUser(userId: String): List<AccessLogEntity> {
+    override fun getLogsByUser(userId: String): Flow<List<AccessLogEntity>> {
         return accessLogDao.getLogsByUser(userId)
     }
 }
