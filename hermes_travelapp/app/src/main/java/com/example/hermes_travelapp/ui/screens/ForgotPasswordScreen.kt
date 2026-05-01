@@ -1,5 +1,6 @@
 package com.example.hermes_travelapp.ui.screens
 
+import android.util.Log
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,6 +30,7 @@ fun ForgotPasswordScreen(
     onNavigateToLogin: () -> Unit = {},
     viewModel: AuthViewModel = hiltViewModel()
 ) {
+    Log.d("AuthUI", "ForgotPasswordScreen: Composición de la pantalla.")
     var email by remember { mutableStateOf("") }
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -118,7 +120,10 @@ fun ForgotPasswordScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { viewModel.forgotPassword(email) },
+                onClick = { 
+                    Log.d("AuthUI", "ForgotPasswordScreen: Usuario solicitó recuperación para $email")
+                    viewModel.forgotPassword(email) 
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
