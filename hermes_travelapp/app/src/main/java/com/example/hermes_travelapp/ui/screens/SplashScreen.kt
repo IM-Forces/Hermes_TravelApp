@@ -1,5 +1,6 @@
 package com.example.hermes_travelapp.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -36,8 +37,10 @@ fun SplashScreen(
             progress += 0.01f
         }
         if (isLoggedIn) {
+            Log.i("AuthUI", "SplashScreen: Usuario ya autenticado. Navegando a Main.")
             onNavigate("main")
         } else {
+            Log.i("AuthUI", "SplashScreen: Usuario no autenticado. Navegando a Login.")
             onNavigate("login")
         }
     }

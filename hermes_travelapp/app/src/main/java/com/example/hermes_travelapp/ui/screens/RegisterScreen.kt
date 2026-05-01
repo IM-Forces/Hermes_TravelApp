@@ -1,5 +1,6 @@
 package com.example.hermes_travelapp.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,6 +39,7 @@ fun RegisterScreen(
     onNavigateToLogin: () -> Unit = {},
     viewModel: AuthViewModel = hiltViewModel()
 ) {
+    Log.d("AuthUI", "RegisterScreen: Composición de la pantalla.")
     var username by remember { mutableStateOf("") }
     var birthDate by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -276,6 +278,7 @@ fun RegisterScreen(
                     } else {
                         Button(
                             onClick = {
+                                Log.d("AuthUI", "RegisterScreen: Usuario pulsó el botón de registro.")
                                 viewModel.registerWithFirebase(
                                     username = username,
                                     birthDate = birthDate,

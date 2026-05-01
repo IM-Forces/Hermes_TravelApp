@@ -1,5 +1,6 @@
 package com.example.hermes_travelapp.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -22,6 +23,7 @@ fun LoginScreen(
     onNavigateToForgotPassword: () -> Unit = {},
     authViewModel: AuthViewModel
 ) {
+    Log.d("AuthUI", "LoginScreen: Composición de la pantalla.")
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val uiState by authViewModel.uiState.collectAsState()
@@ -117,7 +119,10 @@ fun LoginScreen(
                 CircularProgressIndicator()
             } else {
                 Button(
-                    onClick = { authViewModel.signIn(email, password) },
+                    onClick = { 
+                        Log.d("AuthUI", "LoginScreen: Usuario pulsó el botón de iniciar sesión.")
+                        authViewModel.signIn(email, password) 
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {

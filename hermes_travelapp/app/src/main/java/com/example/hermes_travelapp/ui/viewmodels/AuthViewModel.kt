@@ -1,5 +1,6 @@
 package com.example.hermes_travelapp.ui.viewmodels
 
+import android.util.Log
 import android.util.Patterns
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,6 +46,7 @@ class AuthViewModel @Inject constructor(
         password: String,
         confirmPassword: String
     ) {
+        Log.d("AuthVM", "Iniciando registro para: $username ($email)")
         usernameError = if (username.isBlank()) R.string.error_username_required else null
         emailError = when {
             email.isBlank() -> R.string.error_email_required
@@ -80,27 +82,35 @@ class AuthViewModel @Inject constructor(
                 usernameError ?: emailError ?: passwordError ?: confirmPasswordError ?: R.string.error_auth_unknown,
                 errorCode
             )
+            Log.w("AuthVM", "Registro cancelado: Errores de validación local ($errorCode)")
             return
         }
 
         _uiState.value = AuthUiState.Loading
         viewModelScope.launch {
             if (userRepository.isUsernameTaken(username)) {
+                Log.w("AuthVM", "Registro fallido: El nombre de usuario '$username' ya existe.")
                 _uiState.value = AuthUiState.Error(R.string.error_username_taken, "ERROR_USERNAME_TAKEN")
                 return@launch
             }
 
             authRepository.register(email, password, username, birthDate)
-                .onSuccess { _uiState.value = AuthUiState.Success }
+                .onSuccess { 
+                    Log.i("AuthVM", "Registro exitoso para: $email")
+                    _uiState.value = AuthUiState.Success 
+                }
                 .onFailure { error ->
                     val errorCode = (error as? FirebaseAuthException)?.errorCode ?: "ERROR_UNKNOWN"
+                    Log.e("AuthVM", "Error en registro Firebase: $errorCode", error)
                     _uiState.value = AuthUiState.Error(R.string.error_register_failed, errorCode) 
                 }
         }
     }
 
     fun signIn(email: String, password: String) {
+        Log.d("AuthVM", "Intentando login para: $email")
         if (email.isBlank() || password.isBlank()) {
+            Log.w("AuthVM", "Login cancelado: Campos vacíos")
             _uiState.value = AuthUiState.Error(R.string.error_auth_empty_fields, "ERROR_EMPTY_FIELDS")
             return
         }
@@ -110,10 +120,12 @@ class AuthViewModel @Inject constructor(
             val result = authRepository.signIn(email, password)
             result.fold(
                 onSuccess = {
+                    Log.i("AuthVM", "Login exitoso para: $email")
                     _uiState.value = AuthUiState.Success
                 },
                 onFailure = { error ->
                     val errorCode = (error as? FirebaseAuthException)?.errorCode ?: "ERROR_INVALID_CREDENTIALS"
+                    Log.e("AuthVM", "Error en login Firebase: $errorCode", error)
                     _uiState.value = AuthUiState.Error(R.string.error_auth_invalid_credentials, errorCode)
                 }
             )
@@ -143,6 +155,7 @@ class AuthViewModel @Inject constructor(
     }
 
     fun signOut() {
+        Log.i("AuthVM", "Usuario solicitó cerrar sesión.")
         authRepository.signOut()
         _uiState.value = AuthUiState.Idle
     }
