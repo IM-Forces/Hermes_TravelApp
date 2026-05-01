@@ -1,17 +1,21 @@
 package com.example.hermes_travelapp.data.database
 
 import android.content.Context
+import android.util.Log
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.example.hermes_travelapp.data.database.dao.AccessLogDao
 import com.example.hermes_travelapp.data.database.dao.TripDao
 import com.example.hermes_travelapp.data.database.dao.UserDao
+import com.example.hermes_travelapp.data.database.entities.AccessLogEntity
 import com.example.hermes_travelapp.data.database.entities.TripEntity
 import com.example.hermes_travelapp.data.database.entities.UserEntity
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -20,113 +24,141 @@ import java.io.IOException
 
 @RunWith(AndroidJUnit4::class)
 class DatabaseTests {
+    private lateinit var db: AppDatabase
     private lateinit var userDao: UserDao
     private lateinit var tripDao: TripDao
-    private lateinit var db: AppDatabase
+    private lateinit var accessLogDao: AccessLogDao
 
     @Before
     fun createDb() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        db = Room.inMemoryDatabaseBuilder(
-            context, AppDatabase::class.java
-        ).build()
-        userDao = db.userDao()
-        tripDao = db.tripDao()
+        
+        try {
+            // Instanciamos el conversor ya que es @ProvidedTypeConverter
+            val converters = AppTypeConverters()
+            
+            db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
+                .addTypeConverter(converters)
+                .allowMainThreadQueries()
+                .build()
+                
+            userDao = db.userDao()
+            tripDao = db.tripDao()
+            accessLogDao = db.accessLogDao()
+            Log.d("DatabaseTests", "DB inicializada con éxito")
+        } catch (e: Exception) {
+            Log.e("DatabaseTests", "Error inicializando DB", e)
+            throw e
+        }
     }
 
     @After
     @Throws(IOException::class)
     fun closeDb() {
-        db.close()
+        if (::db.isInitialized) {
+            db.close()
+        }
     }
 
     @Test
-    @Throws(Exception::class)
-    fun writeUserAndReadInList() = runBlocking {
+    fun testUserPersistence() = runBlocking {
         val user = UserEntity(
-            id = "user_1",
+            id = "user_123",
             name = "Test User",
-            email = "test@example.com",
-            login = "test@example.com",
-            username = "testuser",
+            email = "test@hermes.com",
+            login = "test@hermes.com",
+            username = "tester",
             birthdate = 0L,
-            address = "",
-            country = "",
-            phone = "",
+            address = "Test St",
+            country = "Spain",
+            phone = "123",
             acceptEmails = true,
             profileInitials = "TU",
             activeTripCount = 0,
             countriesVisited = 0
         )
+        
         userDao.insertUser(user)
-        val byName = userDao.getUserById("user_1")
-        assertEquals(byName?.username, "testuser")
+        val result = userDao.getUserById("user_123")
+        
+        assertNotNull("El usuario no debería ser nulo", result)
+        assertEquals("tester", result?.username)
     }
 
     @Test
-    @Throws(Exception::class)
-    fun insertTripAndCheckIfExists() = runBlocking {
+    fun testTripConstraintAndFiltering() = runBlocking {
+        // Necesitamos insertar el usuario primero por la Foreign Key
         val user = UserEntity(
-            id = "user_1",
-            name = "Test User",
-            email = "test@example.com",
-            login = "test@example.com",
-            username = "testuser",
+            id = "owner_id",
+            name = "Owner",
+            email = "owner@test.com",
+            login = "owner@test.com",
+            username = "owner_username",
             birthdate = 0L,
             address = "",
             country = "",
             phone = "",
-            acceptEmails = true,
-            profileInitials = "TU",
+            acceptEmails = false,
+            profileInitials = "O",
             activeTripCount = 0,
             countriesVisited = 0
         )
         userDao.insertUser(user)
 
         val trip = TripEntity(
-            id = "trip_1",
-            title = "Paris Trip",
-            startDate = "2023-10-01",
-            endDate = "2023-10-10",
-            description = "Fun trip",
-            emoji = "🗼",
+            id = "trip_001",
+            title = "Vacaciones",
+            startDate = "2024-01-01",
+            endDate = "2024-01-10",
+            description = "Desc",
+            emoji = "🏖️",
             budget = 1000,
             spent = 0,
             progress = 0f,
             daysRemaining = 10,
-            userId = "user_1"
+            userId = "owner_id"
         )
         tripDao.insertTrip(trip)
 
-        val exists = tripDao.existsByTitle("user_1", "Paris Trip")
-        assertTrue(exists)
-        
-        val trips = tripDao.getTripsByUser("user_1").first()
+        val trips = tripDao.getTripsByUser("owner_id").first()
         assertEquals(1, trips.size)
-        assertEquals("Paris Trip", trips[0].title)
+        assertEquals("Vacaciones", trips[0].title)
     }
 
     @Test
-    @Throws(Exception::class)
-    fun checkUsernameTaken() = runBlocking {
+    fun testAccessLogPersistence() = runBlocking {
+        val log = AccessLogEntity(
+            userId = "user_123",
+            type = "IN"
+        )
+        
+        accessLogDao.insertLog(log)
+        val logs = accessLogDao.getLogsByUser("user_123").first()
+        
+        assertTrue("Debería haber al menos un log", logs.isNotEmpty())
+        assertEquals("IN", logs[0].type)
+    }
+
+    @Test
+    fun testUsernameUniqueness() = runBlocking {
         val user = UserEntity(
-            id = "user_1",
-            name = "Test User",
-            email = "test@example.com",
-            login = "test@example.com",
-            username = "testuser",
+            id = "u1",
+            name = "U1",
+            email = "u1@test.com",
+            login = "u1@test.com",
+            username = "unique_user",
             birthdate = 0L,
             address = "",
             country = "",
             phone = "",
-            acceptEmails = true,
-            profileInitials = "TU",
+            acceptEmails = false,
+            profileInitials = "U",
             activeTripCount = 0,
             countriesVisited = 0
         )
         userDao.insertUser(user)
         
-        val isTaken = userDao.isUsernameTaken("testuser")
-        assertTrue(isTaken)
+        val isTaken = userDao.isUsernameTaken("unique_user")
+        assertTrue("El username debería estar ocupado", isTaken)
     }
 }

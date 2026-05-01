@@ -1,12 +1,19 @@
 package com.example.hermes_travelapp.data.database.dao
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Transaction
+import androidx.room.Update
 import com.example.hermes_travelapp.data.database.entities.TripEntity
 import com.example.hermes_travelapp.data.database.entities.TripWithDays
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TripDao {
+
     @Query("SELECT * FROM trips WHERE user_id = :userId")
     fun getTripsByUser(userId: String): Flow<List<TripEntity>>
 
