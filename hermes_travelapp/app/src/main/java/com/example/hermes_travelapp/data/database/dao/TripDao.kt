@@ -13,6 +13,9 @@ interface TripDao {
     @Query("SELECT * FROM trips WHERE id = :tripId")
     suspend fun getTripById(tripId: String): TripEntity?
 
+    @Query("SELECT EXISTS(SELECT 1 FROM trips WHERE user_id = :userId AND title = :title)")
+    suspend fun existsByTitle(userId: String, title: String): Boolean
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTrip(trip: TripEntity)
 

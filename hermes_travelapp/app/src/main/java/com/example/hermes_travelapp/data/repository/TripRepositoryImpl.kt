@@ -39,16 +39,43 @@ class TripRepositoryImpl @Inject constructor(
 
     override suspend fun addTrip(trip: Trip) {
         val userId = authRepository.getCurrentUserId() ?: "default_user"
-        Log.d(TAG, "addTrip called with title='${trip.title}', userId=$userId")
-        tripDao.insertTrip(trip.toEntity(userId))
-        Log.i(TAG, "addTrip successful: trip '${trip.title}' added for user $userId.")
+        Log.d(TAG, "addTrip: Validando datos para el viaje '${trip.title}'")
+
+        if (tripDao.existsByTitle(userId, trip.title)) {
+            Log.e(TAG, "addTrip: Error - El nombre '${trip.title}' ya está en uso para este usuario.")
+            throw IllegalStateException("Ya existe un viaje con este nombre.")
+        }
+
+        if (trip.startDate > trip.endDate) {
+            Log.e(TAG, "addTrip: Error - La fecha de inicio (${trip.startDate}) es posterior a la de fin (${trip.endDate}).")
+            throw IllegalArgumentException("La fecha de inicio no puede ser posterior a la fecha de fin.")
+        }
+
+        try {
+            tripDao.insertTrip(trip.toEntity(userId))
+            Log.i(TAG, "addTrip: Éxito - Viaje '${trip.title}' persistido en DB local.")
+        } catch (e: Exception) {
+            Log.e(TAG, "addTrip: Error crítico al insertar en la base de datos", e)
+            throw e
+        }
     }
 
     override suspend fun editTrip(trip: Trip) {
         val userId = authRepository.getCurrentUserId() ?: "default_user"
-        Log.d(TAG, "editTrip called for id=${trip.id}, userId=$userId")
-        tripDao.updateTrip(trip.toEntity(userId))
-        Log.i(TAG, "editTrip successful: trip id=${trip.id} updated for user $userId.")
+        Log.d(TAG, "editTrip: Intentando actualizar viaje ID ${trip.id} para usuario $userId")
+
+        if (trip.title.isBlank()) {
+            Log.e(TAG, "editTrip: Error - El título no puede estar vacío.")
+            throw IllegalArgumentException("El título no puede estar vacío.")
+        }
+
+        try {
+            tripDao.updateTrip(trip.toEntity(userId))
+            Log.i(TAG, "editTrip: Éxito - Viaje ID ${trip.id} actualizado.")
+        } catch (e: Exception) {
+            Log.e(TAG, "editTrip: Error al actualizar en la base de datos", e)
+            throw e
+        }
     }
 
     override suspend fun deleteTrip(tripId: String) {
