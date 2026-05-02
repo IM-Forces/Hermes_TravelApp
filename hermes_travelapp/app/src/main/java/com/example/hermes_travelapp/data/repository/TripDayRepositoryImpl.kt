@@ -25,26 +25,53 @@ class TripDayRepositoryImpl @Inject constructor(
         Log.d(TAG, "getDaysForTrip: tripId=$tripId")
         return tripDayDao.getDaysForTrip(tripId).map { entities ->
             entities.map { it.toDomain() }
+        }.also {
+            Log.i(TAG, "getDaysForTrip: Flow created successfully for tripId=$tripId")
         }
     }
 
     override suspend fun addDay(day: TripDay) {
-        Log.d(TAG, "addDay: dayId=${day.id}, tripId=${day.tripId}")
-        tripDayDao.insertTripDay(day.toEntity())
+        try {
+            Log.d(TAG, "addDay: dayId=${day.id}, tripId=${day.tripId}")
+            tripDayDao.insertTripDay(day.toEntity())
+            Log.i(TAG, "addDay successful: dayId=${day.id}")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error adding day: ${e.message}", e)
+            throw e
+        }
     }
 
     override suspend fun clearDaysForTrip(tripId: String) {
-        Log.d(TAG, "clearDaysForTrip: tripId=$tripId")
-        tripDayDao.deleteDaysByTripId(tripId)
+        try {
+            Log.d(TAG, "clearDaysForTrip: tripId=$tripId")
+            tripDayDao.deleteDaysByTripId(tripId)
+            Log.i(TAG, "clearDaysForTrip successful: tripId=$tripId")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error clearing days: ${e.message}", e)
+            throw e
+        }
     }
 
     override suspend fun getLastDayForTrip(tripId: String): TripDay? {
-        Log.d(TAG, "getLastDayForTrip: tripId=$tripId")
-        return tripDayDao.getLastDayForTrip(tripId)?.toDomain()
+        return try {
+            Log.d(TAG, "getLastDayForTrip: tripId=$tripId")
+            val result = tripDayDao.getLastDayForTrip(tripId)?.toDomain()
+            Log.i(TAG, "getLastDayForTrip successful: tripId=$tripId")
+            result
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting last day: ${e.message}", e)
+            throw e
+        }
     }
 
     override suspend fun deleteDay(dayId: String) {
-        Log.d(TAG, "deleteDay: dayId=$dayId")
-        tripDayDao.deleteDayById(dayId)
+        try {
+            Log.d(TAG, "deleteDay: dayId=$dayId")
+            tripDayDao.deleteDayById(dayId)
+            Log.i(TAG, "deleteDay successful: dayId=$dayId")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error deleting day: ${e.message}", e)
+            throw e
+        }
     }
 }

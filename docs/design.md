@@ -64,8 +64,8 @@ hermes_travelapp/
 │   └── ValidationUtils   # Date and field validation logic
 └── data/
     ├── database/
-    │   ├── dao/          # TripDao, TripDayDao, ItineraryItemDao
-    │   ├── entities/     # TripEntity, TripDayEntity, ItineraryItemEntity, UserEntity
+    │   ├── dao/          # TripDao, TripDayDao, ItineraryItemDao, UserDao, AccessLogDao
+    │   ├── entities/     # TripEntity, TripDayEntity, ItineraryItemEntity, UserEntity, AccessLogEntity
     │   ├── mapper/       # Extension functions toDomain() / toEntity()
     │   └── AppDatabase   # Room database class + TypeConverters
     ├── repository/       # Repository implementations (Room + Firebase)
@@ -136,10 +136,10 @@ Splash
 
 ### Overview
 
-The app uses **Room Database** (version 1) as the local persistence layer, replacing the in-memory storage from Sprint 02. Firebase Auth manages authentication exclusively; user profile data and trip data are stored locally in SQLite via Room.
+The app uses **Room Database** (version 2) as the local persistence layer, replacing the in-memory storage from Sprint 02. Firebase Auth manages authentication exclusively; user profile data and trip data are stored locally in SQLite via Room.
 
 **Database name:** `hermes_database`  
-**Room version:** 1  
+**Room version:** 2  
 **Migration strategy:** `fallbackToDestructiveMigration` (development only — see Migration Strategy below)
 
 ---
@@ -147,30 +147,32 @@ The app uses **Room Database** (version 1) as the local persistence layer, repla
 ### Entity Diagram
 
 ```
-┌──────────────┐         ┌───────────────────┐         ┌───────────────────────┐
-│    users     │ 1     * │      trips        │ 1     * │      trip_days        │
-│──────────────│         │───────────────────│         │───────────────────────│
-│ id (PK)      │────────►│ id (PK)           │────────►│ id (PK)               │
-│ name         │         │ title             │         │ trip_id (FK)          │
-│ email        │         │ startDate         │         │ dayNumber  [INTEGER]  │
-│ profileInits │         │ endDate           │         │ date       [LONG]     │
-│ activeTripCt │         │ description       │         └───────────┬───────────┘
-│ countries    │         │ emoji             │                     │ 1
-└──────────────┘         │ budget [INTEGER]  │                     │
-                         │ spent  [INTEGER]  │                     │ *
-                         │ progress [REAL]   │         ┌───────────▼───────────┐
-                         │ daysRemaining     │         │    itinerary_items    │
-                         │ user_id (FK)      │         │───────────────────────│
-                         └───────────────────┘         │ id (PK)               │
-                                                       │ trip_id               │
-                                                       │ day_id (FK)           │
-                                                       │ title      [TEXT]     │
-                                                       │ description [TEXT]    │
-                                                       │ date       [LONG]     │
-                                                       │ time       [TEXT]     │
-                                                       │ location   [TEXT]?    │
-                                                       │ cost       [REAL]?    │
-                                                       └───────────────────────┘
+┌──────────────────────┐         ┌───────────────────┐         ┌───────────────────────┐
+│        users         │ 1     * │      trips        │ 1     * │      trip_days        │
+│──────────────────────│         │───────────────────│         │───────────────────────│
+│ id (PK)              │────────►│ id (PK)           │────────►│ id (PK)               │
+│ name                 │         │ title             │         │ trip_id (FK)          │
+│ email                │         │ startDate         │         │ dayNumber  [INTEGER]  │
+│ login                │         │ endDate           │         │ date       [LONG]     │
+│ username             │         │ description       │         └───────────┬───────────┘
+│ birthdate [LONG]     │         │ emoji             │                     │ 1
+│ address              │         │ budget [INTEGER]  │                     │
+│ country              │         │ spent  [INTEGER]  │                     │ *
+│ phone                │         │ progress [REAL]   │         ┌───────────▼───────────┐
+│ acceptEmails [INT]   │         │ daysRemaining     │         │    itinerary_items    │
+│ profileInitials      │         │ user_id (FK)      │         │───────────────────────│
+│ activeTripCount      │         └───────────────────┘         │ id (PK)               │
+│ countriesVisited     │                                        │ trip_id               │
+└──────────────────────┘                                        │ day_id (FK)           │
+                                                                │ title      [TEXT]     │
+┌──────────────────────┐                                        │ description [TEXT]    │
+│      access_log      │                                        │ date       [LONG]     │
+│──────────────────────│                                        │ time       [TEXT]     │
+│ id (PK)              │                                        │ location   [TEXT]?    │
+│ userId               │                                        │ cost       [REAL]?    │
+│ datetime [LONG]      │                                        └───────────────────────┘
+│ type [TEXT]          │
+└──────────────────────┘
 ```
 
 ---
@@ -183,7 +185,14 @@ The app uses **Room Database** (version 1) as the local persistence layer, repla
 |---|---|---|---|
 | `id` | TEXT | PRIMARY KEY | Firebase UID or `"default_user"` during development |
 | `name` | TEXT | NOT NULL | Full display name |
-| `email` | TEXT | NOT NULL | Email address |
+| `email` | TEXT | NOT NULL | Contact email address |
+| `login` | TEXT | NOT NULL | Email used to log in (Firebase) |
+| `username` | TEXT | NOT NULL | Unique username chosen by the user |
+| `birthdate` | INTEGER | NOT NULL | Stored as epoch day (`LocalDate.toEpochDay()`) |
+| `address` | TEXT | NOT NULL | Physical address |
+| `country` | TEXT | NOT NULL | Country of residence |
+| `phone` | TEXT | NOT NULL | Contact phone number |
+| `acceptEmails` | INTEGER | NOT NULL | Whether the user accepts marketing emails (0/1) |
 | `profileInitials` | TEXT | NOT NULL | Short initials, e.g. `"VS"` |
 | `activeTripCount` | INTEGER | NOT NULL | Cached count of active trips |
 | `countriesVisited` | INTEGER | NOT NULL | Cached count of visited countries |
@@ -226,6 +235,15 @@ The app uses **Room Database** (version 1) as the local persistence layer, repla
 | `time` | TEXT | NOT NULL | Stored as `"HH:mm"` string |
 | `location` | TEXT | NULLABLE | Optional venue or address |
 | `cost` | REAL | NULLABLE | Estimated cost in EUR |
+
+#### `access_log`
+
+| Column | Type | Constraints | Description |
+|---|---|---|---|
+| `id` | TEXT | PRIMARY KEY | UUID generated client-side |
+| `userId` | TEXT | NOT NULL | ID of the user who performed the action |
+| `datetime` | INTEGER | NOT NULL | Timestamp in epoch milliseconds |
+| `type` | TEXT | NOT NULL | `"IN"` for login, `"OUT"` for logout |
 
 ---
 
@@ -280,8 +298,10 @@ Room.databaseBuilder(context, AppDatabase::class.java, "hermes_database")
 |---|---|---|
 | `getTripsByUser(userId)` | `Flow<List<TripEntity>>` | All trips for one user, reactive |
 | `getTripById(tripId)` | `TripEntity?` | Single trip lookup |
+| `existsByTitle(userId, title)` | `Boolean` | Checks for duplicate trip name per user |
 | `insertTrip(trip)` | `suspend` | Insert with `REPLACE` on conflict |
 | `updateTrip(trip)` | `suspend` | Full entity update |
+| `deleteTrip(trip)` | `suspend` | Delete by entity object |
 | `deleteTripById(tripId)` | `suspend` | Delete by ID |
 | `getTripsWithDays(userId)` | `Flow<List<TripWithDays>>` | @Transaction join query |
 
@@ -302,7 +322,27 @@ Room.databaseBuilder(context, AppDatabase::class.java, "hermes_database")
 | `getActivitiesForDay(dayId)` | `Flow<List<ItineraryItemEntity>>` | Activities ordered by time ASC, reactive |
 | `insertActivity(activity)` | `suspend` | Insert with `REPLACE` on conflict |
 | `updateActivity(activity)` | `suspend` | Full entity update |
+| `deleteActivity(activity)` | `suspend` | Delete by entity object |
 | `deleteActivityById(activityId)` | `suspend` | Delete by ID |
+
+#### `UserDao`
+
+| Method | Return | Description |
+|---|---|---|
+| `insertUser(user)` | `suspend` | Insert with `REPLACE` on conflict |
+| `getUserById(id)` | `UserEntity?` | Single user lookup by ID |
+| `getUserByEmail(email)` | `UserEntity?` | Single user lookup by email |
+| `updateUser(user)` | `suspend` | Full entity update |
+| `deleteUser(id)` | `suspend` | Delete user by ID |
+| `isUsernameTaken(username)` | `Boolean` | Checks if username already exists |
+| `getAllUsers()` | `Flow<List<UserEntity>>` | All users, reactive |
+
+#### `AccessLogDao`
+
+| Method | Return | Description |
+|---|---|---|
+| `insertLog(log)` | `suspend` | Insert a new access log entry |
+| `getLogsByUser(userId)` | `Flow<List<AccessLogEntity>>` | All logs for a user ordered by datetime DESC |
 
 ---
 
@@ -314,7 +354,7 @@ Trips are scoped to the authenticated user via the `user_id` column in the `trip
 SELECT * FROM trips WHERE user_id = :userId
 ```
 
-During Sprint 03, `"default_user"` is used as the fallback ID (pre-seeded on database creation). Full Firebase UID integration — passing `authRepository.getCurrentUserId()` into repository calls — is planned for Sprint 04.
+The real Firebase UID is passed via `authRepository.getCurrentUserId()` in `TripRepositoryImpl`. A `"default_user"` is pre-seeded on database creation as a fallback for unauthenticated states during development.
 
 ---
 
@@ -328,6 +368,8 @@ Room components are provided as singletons via `DatabaseModule`:
 | `provideTripDao(database)` | `@Singleton` | `TripDao` |
 | `provideTripDayDao(database)` | `@Singleton` | `TripDayDao` |
 | `provideItineraryItemDao(database)` | `@Singleton` | `ItineraryItemDao` |
+| `provideUserDao(database)` | `@Singleton` | `UserDao` |
+| `provideAccessLogDao(database)` | `@Singleton` | `AccessLogDao` |
 
 Firebase components are provided via `FirebaseModule`:
 
@@ -358,6 +400,23 @@ Firebase errors are mapped from `FirebaseAuthException.errorCode` to localized s
 
 ---
 
+## Data Validation (Sprint 03)
+
+### Implemented Validations
+
+| Validation | Where | Description |
+|---|---|---|
+| Duplicate trip name | `TripRepositoryImpl.addTrip()` | Calls `existsByTitle()` before insert |
+| Start date before end date | `TripViewModel.validateTrip()` | Parsed with `DateTimeFormatter` |
+| Date format | `TripViewModel.validateTrip()` | Catches `DateTimeParseException` |
+| Activity date within trip range | `ValidationUtils.validateActivityDate()` | Compares with trip start/end |
+| Email format | `ValidationUtils.isValidEmail()` | Uses `Patterns.EMAIL_ADDRESS` |
+| Username uniqueness | `UserRepositoryImpl.createUser()` | Calls `isUsernameTaken()` before insert |
+| Password length | `AuthViewModel.registerWithFirebase()` | Minimum 6 characters |
+| Password confirmation | `AuthViewModel.registerWithFirebase()` | Checks password == confirmPassword |
+
+---
+
 ## Design Decisions
 
 ### Why Room over raw SQLite?
@@ -375,15 +434,49 @@ Client-side UUID generation avoids round-trips to the server for ID assignment a
 ### Why SharedPreferences for user preferences?
 Preferences such as language code and dark mode are small, scalar values that do not need relational queries or reactive flows. SharedPreferences is the simplest and most appropriate tool for this use case.
 
+### Why a separate `access_log` table?
+Persisting every login and logout event with userId and timestamp allows auditing of user sessions without polluting the `users` table with session-specific data.
+
+---
+
+## Testing (Sprint 03)
+
+### Instrumented Tests (`androidTest`)
+
+All DAO tests run against a Room in-memory database (`Room.inMemoryDatabaseBuilder`) to avoid side effects on the real database.
+
+| Test Class | DAOs Covered |
+|---|---|
+| `DatabaseTests` | `TripDao`, `UserDao`, `AccessLogDao`, `ItineraryItemDao` |
+
+### Test Coverage
+
+| Test | What it validates |
+|---|---|
+| `testUserPersistence` | Insert and query user |
+| `testTripConstraintAndFiltering` | Insert trip and filter by userId |
+| `testAccessLogPersistence` | Insert and query access log |
+| `testUsernameUniqueness` | `isUsernameTaken()` returns true after insert |
+| `testTripUpdate` | Trip title and budget update persists |
+| `testTripDelete` | Trip deleted by entity object |
+| `testTripDeleteById` | Trip deleted by ID string |
+| `testTripInvalidDates` | Room does not enforce date order (validated at ViewModel layer) |
+| `testDuplicateTripNamePrevention` | `existsByTitle()` returns true for existing name |
+| `testValidationUtils` | `validateTripDates()` returns error for invalid range, null for valid |
+| `testInsertAndQueryActivity` | Insert activity and query by dayId |
+| `testUpdateActivity` | Activity title and time update persists |
+| `testDeleteActivity` | Activity deleted by entity object |
+| `testDeleteActivityById` | Activity deleted by ID string |
+| `testActivitiesOrderedByTime` | Activities returned in ascending time order |
+| `testActivitiesFilteredByDayId` | Activities correctly isolated by dayId |
+
 ---
 
 ## Next Steps
 
 ### Sprint 04 (26/04/2026)
-- Connect `user_id` in trips to the real Firebase UID from `AuthRepository.getCurrentUserId()`
-- Persist full user profile (username, birthdate, phone, country) to the `users` Room table on registration
-- Add `AccessLogEntity` table to persist every login and logout event with timestamp
-- Replace `"default_user"` fallback throughout the repository layer
+- Persist full user profile edits from `AccountScreen` to the `users` Room table
+- Implement profile photo upload and storage
 
 ### Sprint 05 (16/05/2026)
 - Camera integration for trip photos

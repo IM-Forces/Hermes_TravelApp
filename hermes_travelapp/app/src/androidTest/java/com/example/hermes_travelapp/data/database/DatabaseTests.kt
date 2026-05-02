@@ -15,11 +15,13 @@ import com.example.hermes_travelapp.data.database.entities.ItineraryItemEntity
 import com.example.hermes_travelapp.data.database.entities.TripDayEntity
 import com.example.hermes_travelapp.data.database.entities.TripEntity
 import com.example.hermes_travelapp.data.database.entities.UserEntity
+import com.example.hermes_travelapp.domain.ValidationUtils
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -561,5 +563,75 @@ class DatabaseTests {
         val resultDay2 = itineraryItemDao.getActivitiesForDay("day_2").first()
         assertEquals(1, resultDay2.size)
         assertEquals("Day 2 Activity", resultDay2[0].title)
+    }
+
+    @Test
+    fun testDuplicateTripNamePrevention() = runBlocking {
+        val userId = "user_dup_test"
+        val tripTitle = "Japan 2024"
+        
+        // Insert user
+        val user = UserEntity(
+            id = userId,
+            name = "Dup User",
+            email = "dup@test.com",
+            login = "dup@test.com",
+            username = "dup_user",
+            birthdate = 0L,
+            address = "",
+            country = "",
+            phone = "",
+            acceptEmails = false,
+            profileInitials = "D",
+            activeTripCount = 0,
+            countriesVisited = 0
+        )
+        userDao.insertUser(user)
+
+        // Insert first trip
+        val trip = TripEntity(
+            id = "trip_dup_1",
+            title = tripTitle,
+            startDate = "2024-01-01",
+            endDate = "2024-01-10",
+            description = "",
+            emoji = "🇯🇵",
+            budget = 1000,
+            spent = 0,
+            progress = 0f,
+            daysRemaining = 10,
+            userId = userId
+        )
+        tripDao.insertTrip(trip)
+
+        // Verify existsByTitle returns true for the same user and title
+        val exists = tripDao.existsByTitle(userId, tripTitle)
+        assertTrue("El DAO debería detectar que el nombre del viaje ya existe para este usuario", exists)
+    }
+
+    @Test
+    fun testValidationUtils() {
+        // Fechas válidas (futuras y en orden correcto)
+        val validStart = "01/01/2030"
+        val validEnd = "10/01/2030"
+        
+        val validResult = ValidationUtils.validateTripDates(validStart, validEnd)
+        assertNull("Debería retornar null para fechas válidas", validResult)
+
+        // Fechas inválidas (inicio después de fin)
+        val invalidStart = "15/01/2030"
+        val invalidEnd = "10/01/2030"
+        
+        val invalidResult = ValidationUtils.validateTripDates(invalidStart, invalidEnd)
+        assertEquals(
+            "La fecha de inicio debe ser anterior a la de fin",
+            invalidResult
+        )
+        
+        // Fechas en el pasado (también debería fallar según la lógica de ValidationUtils)
+        val pastStart = "01/01/2020"
+        val pastEnd = "05/01/2020"
+        val pastResult = ValidationUtils.validateTripDates(pastStart, pastEnd)
+        assertEquals("La fecha de inicio no puede estar en el pasado", pastResult)
     }
 }
