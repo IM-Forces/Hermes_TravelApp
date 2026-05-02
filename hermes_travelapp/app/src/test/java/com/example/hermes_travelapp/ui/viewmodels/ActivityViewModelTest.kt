@@ -5,6 +5,12 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.example.hermes_travelapp.domain.repository.ActivityRepository
 import com.example.hermes_travelapp.domain.model.ItineraryItem
 import io.mockk.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -12,84 +18,104 @@ import org.junit.Test
 import java.time.LocalDate
 import java.time.LocalTime
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class ActivityViewModelTest {
 
     @get:Rule
     val instantTaskExecutorRule = InstantTaskExecutorRule()
+
+    private val testDispatcher = UnconfinedTestDispatcher()
 
     private lateinit var repository: ActivityRepository
     private lateinit var viewModel: ActivityViewModel
 
     @Before
     fun setUp() {
-        // SOLUCIÓN: Mockeamos la clase Log de Android para que no falle en la JVM
+        Dispatchers.setMain(testDispatcher)
+        
+        // Mock Log
         mockkStatic(Log::class)
-        every { Log.d(any<String>(), any<String>()) } returns 0
-        every { Log.i(any<String>(), any<String>()) } returns 0
-        every { Log.e(any<String>(), any<String>()) } returns 0
-        every { Log.w(any<String>(), any<String>()) } returns 0
+        every { Log.d(any(), any()) } returns 0
+        every { Log.i(any(), any()) } returns 0
+        every { Log.e(any(), any()) } returns 0
 
         repository = mockk(relaxed = true)
-        
-        viewModel = ActivityViewModel()
-        
-        val field = ActivityViewModel::class.java.getDeclaredField("repository")
-        field.isAccessible = true
-        field.set(viewModel, repository)
+        viewModel = ActivityViewModel(repository)
     }
 
     @After
     fun tearDown() {
+        Dispatchers.resetMain()
         unmockkStatic(Log::class)
     }
 
     @Test
-    fun `test loadActivitiesForDay updates activities state`() {
-        val tripId = "trip1"
+    fun `loadActivitiesForDay updates activities state`() {
+        // Arrange
         val dayId = "day1"
         val mockActivities = listOf(
-            ItineraryItem("1", tripId, dayId, "Visit Museum", "Desc", LocalDate.now(), LocalTime.now())
+            ItineraryItem("1", "trip1", dayId, "Museum", "Desc", LocalDate.now(), LocalTime.now())
         )
-        every { repository.getActivitiesForDay(tripId, dayId) } returns mockActivities
+        every { repository.getActivitiesForDay(dayId) } returns flowOf(mockActivities)
 
-        viewModel.loadActivitiesForDay(tripId, dayId)
+        // Act
+        viewModel.loadActivitiesForDay(dayId)
 
+        // Assert
         assertEquals(mockActivities, viewModel.activities.value)
         assertEquals(1, viewModel.dayCounts.value[dayId])
     }
 
     @Test
-    fun `test addActivity calls repository and reloads`() {
-        val tripId = "trip1"
-        val dayId = "day1"
-        val activity = ItineraryItem("1", tripId, dayId, "Visit Museum", "Desc", LocalDate.now(), LocalTime.now())
-        
+    fun `addActivity calls repository when valid`() {
+        // Arrange
+        val activity = ItineraryItem(
+            id = "1",
+            tripId = "trip1",
+            dayId = "day1",
+            title = "Valid Title",
+            description = "Valid Description",
+            date = LocalDate.now(),
+            time = LocalTime.now()
+        )
+
+        // Act
         viewModel.addActivity(activity)
 
-        verify { repository.addActivity(activity) }
-        verify { repository.getActivitiesForDay(tripId, dayId) }
+        // Assert
+        coVerify { repository.addActivity(activity) }
     }
 
     @Test
-    fun `test deleteActivity calls repository and reloads`() {
-        val tripId = "trip1"
-        val dayId = "day1"
-        val activityId = "1"
+    fun `deleteActivity calls repository`() {
+        // Arrange
+        val activityId = "act_123"
 
-        viewModel.deleteActivity(activityId, tripId, dayId)
+        // Act
+        viewModel.deleteActivity(activityId)
 
-        verify { repository.deleteActivity(activityId) }
-        verify { repository.getActivitiesForDay(tripId, dayId) }
+        // Assert
+        coVerify { repository.deleteActivity(activityId) }
     }
 
     @Test
-    fun `test validation rejects invalid activity`() {
-        val invalidActivity = ItineraryItem("1", "trip1", "day1", "", "Desc", LocalDate.now(), LocalTime.now())
-        
+    fun `validation rejects activity with empty title`() {
+        // Arrange
+        val invalidActivity = ItineraryItem(
+            id = "1",
+            tripId = "trip1",
+            dayId = "day1",
+            title = "", // Titulo vacío invalida la actividad
+            description = "Desc",
+            date = LocalDate.now(),
+            time = LocalTime.now()
+        )
+
+        // Act
         viewModel.addActivity(invalidActivity)
 
-        verify(exactly = 0) { repository.addActivity(any()) }
+        // Assert
+        coVerify(exactly = 0) { repository.addActivity(any()) }
     }
 }

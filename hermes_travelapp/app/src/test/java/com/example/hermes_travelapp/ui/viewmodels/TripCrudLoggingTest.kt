@@ -2,27 +2,35 @@ package com.example.hermes_travelapp.ui.viewmodels
 
 import android.util.Log
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import com.example.hermes_travelapp.data.fakeDB.FakeTripDataSource
-import com.example.hermes_travelapp.data.repository.TripRepositoryImpl
 import com.example.hermes_travelapp.domain.model.Trip
+import com.example.hermes_travelapp.domain.repository.TripRepository
 import io.mockk.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertTrue
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class TripCrudLoggingTest {
 
     @get:Rule
     val instantTaskExecutorRule = InstantTaskExecutorRule()
 
-    private lateinit var repository: TripRepositoryImpl
+    private val testDispatcher = UnconfinedTestDispatcher()
+    private lateinit var repository: TripRepository
     private lateinit var viewModel: TripViewModel
 
     @Before
     fun setUp() {
-        // Mock de la clase Log de Android indicando tipos explícitos para evitar ambigüedad
+        Dispatchers.setMain(testDispatcher)
+        
+        // Mock de la clase Log de Android con tipos explícitos para evitar errores de inferencia
         mockkStatic(Log::class)
         every { Log.d(any<String>(), any<String>()) } returns 0
         every { Log.i(any<String>(), any<String>()) } returns 0
@@ -30,15 +38,13 @@ class TripCrudLoggingTest {
         every { Log.w(any<String>(), any<String>()) } returns 0
         every { Log.v(any<String>(), any<String>()) } returns 0
 
-        repository = TripRepositoryImpl()
+        repository = mockk(relaxed = true)
         viewModel = TripViewModel(repository)
-        
-        // Limpiar el data source antes de cada prueba
-        FakeTripDataSource.getTrips().forEach { FakeTripDataSource.deleteTrip(it.id) }
     }
 
     @After
     fun tearDown() {
+        Dispatchers.resetMain()
         unmockkStatic(Log::class)
     }
 
@@ -55,9 +61,9 @@ class TripCrudLoggingTest {
         
         assertTrue(success)
         
-        // Verificamos que se llamaron a los niveles de log esperados usando matchers
-        verify { Log.d(any<String>(), match { it.contains("addTrip") || it.contains("attempting") }) }
-        verify { Log.i(any<String>(), match { it.contains("added successfully") }) }
+        // Verificamos que se llamaron a los niveles de log esperados
+        verify { Log.d(any<String>(), match<String> { it.contains("addTrip") || it.contains("attempting") }) }
+        verify { Log.i(any<String>(), match<String> { it.contains("created successfully") }) }
     }
 
     @Test
@@ -72,7 +78,7 @@ class TripCrudLoggingTest {
         viewModel.addTrip(invalidTrip)
 
         // Verificamos que se registra el error en el log
-        verify { Log.e(any<String>(), match { it.contains("Validation failed") || it.contains("blank") }) }
+        verify { Log.e(any<String>(), match<String> { it.contains("Validation failed") || it.contains("blank") }) }
     }
 
     @Test
@@ -81,7 +87,7 @@ class TripCrudLoggingTest {
         
         viewModel.deleteTrip(tripId)
 
-        verify { Log.d(any<String>(), match { it.contains("delete") }) }
-        verify { Log.i(any<String>(), match { it.contains("deleted") }) }
+        verify { Log.d(any<String>(), match<String> { it.contains("deleteTrip") }) }
+        verify { Log.i(any<String>(), match<String> { it.contains("deleted successfully") }) }
     }
 }

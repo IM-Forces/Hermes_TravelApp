@@ -6,6 +6,12 @@ import com.example.hermes_travelapp.R
 import com.example.hermes_travelapp.domain.model.Trip
 import com.example.hermes_travelapp.domain.repository.TripRepository
 import io.mockk.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -15,63 +21,83 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class TripViewModelTest {
 
     @get:Rule
     val instantTaskExecutorRule = InstantTaskExecutorRule()
 
+    private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var repository: TripRepository
     private lateinit var viewModel: TripViewModel
+    private val tripsFlow = MutableStateFlow<List<Trip>>(emptyList())
 
     @Before
     fun setUp() {
-        // SOLUCIÓN: Mockeamos la clase Log de Android para que no falle en la JVM
+        Dispatchers.setMain(testDispatcher)
+        
+        // Mock Log
         mockkStatic(Log::class)
         every { Log.d(any<String>(), any<String>()) } returns 0
         every { Log.i(any<String>(), any<String>()) } returns 0
         every { Log.e(any<String>(), any<String>()) } returns 0
         every { Log.w(any<String>(), any<String>()) } returns 0
 
-        repository = mockk(relaxed = true)
-        every { repository.getTrips() } returns emptyList()
+        repository = mockk()
+        every { repository.getTrips() } returns tripsFlow
+        
         viewModel = TripViewModel(repository)
     }
 
     @After
     fun tearDown() {
-        // Limpiamos los mocks estáticos después de cada test
+        Dispatchers.resetMain()
         unmockkStatic(Log::class)
     }
 
     @Test
     fun `test addTrip successfully`() {
-        val trip = Trip(title = "Test Trip", startDate = "01/01/2024", endDate = "10/01/2024", description = "Desc")
+        val trip = Trip(
+            title = "Test Trip",
+            startDate = "01/01/2024",
+            endDate = "10/01/2024",
+            description = "Desc"
+        )
+        coEvery { repository.addTrip(any()) } just Runs
         
         val result = viewModel.addTrip(trip)
         
         assertTrue(result)
-        verify { repository.addTrip(trip) }
+        coVerify { repository.addTrip(trip) }
         assertNull(viewModel.errorMessageRes.value)
     }
 
     @Test
     fun `test editTrip successfully`() {
-        val trip = Trip(id = "1", title = "Updated Trip", startDate = "01/01/2024", endDate = "10/01/2024", description = "Desc")
+        val trip = Trip(
+            id = "1",
+            title = "Updated Trip",
+            startDate = "01/01/2024",
+            endDate = "10/01/2024",
+            description = "Desc"
+        )
+        coEvery { repository.editTrip(any()) } just Runs
         
         val result = viewModel.editTrip(trip)
         
         assertTrue(result)
-        verify { repository.editTrip(trip) }
+        coVerify { repository.editTrip(trip) }
         assertNull(viewModel.errorMessageRes.value)
     }
 
     @Test
     fun `test deleteTrip successfully`() {
         val tripId = "1"
+        coEvery { repository.deleteTrip(tripId) } just Runs
         
         viewModel.deleteTrip(tripId)
         
-        verify { repository.deleteTrip(tripId) }
+        coVerify { repository.deleteTrip(tripId) }
     }
 
     @Test
@@ -80,9 +106,9 @@ class TripViewModelTest {
             Trip(title = "Trip 1", startDate = "01/01/2024", endDate = "05/01/2024", description = "D1"),
             Trip(title = "Trip 2", startDate = "10/01/2024", endDate = "15/01/2024", description = "D2")
         )
-        every { repository.getTrips() } returns trips
         
-        viewModel.loadTrips()
+        // Emitting trips through the flow
+        tripsFlow.value = trips
         
         assertEquals(2, viewModel.trips.value.size)
         assertEquals("Trip 1", viewModel.trips.value[0].title)
@@ -95,7 +121,6 @@ class TripViewModelTest {
         val result = viewModel.addTrip(trip)
         
         assertFalse(result)
-        // Comprobamos contra el ID del recurso de error
         assertEquals(R.string.error_required_dates, viewModel.errorMessageRes.value)
     }
 
@@ -106,7 +131,6 @@ class TripViewModelTest {
         val result = viewModel.addTrip(trip)
         
         assertFalse(result)
-        // Comprobamos contra el ID del recurso de error de rango
         assertEquals(R.string.error_invalid_range, viewModel.errorMessageRes.value)
     }
 }

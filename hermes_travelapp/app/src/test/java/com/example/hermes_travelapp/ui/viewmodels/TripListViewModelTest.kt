@@ -8,6 +8,7 @@ import com.example.hermes_travelapp.domain.repository.TripRepository
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Before
@@ -15,30 +16,7 @@ import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-
-/**
- * Fake implementation of TripRepository for unit testing.
- */
-class FakeTripRepository : TripRepository {
-    private val trips = mutableListOf<Trip>()
-
-    override fun getTrips(): List<Trip> = trips.toList()
-
-    override fun addTrip(trip: Trip) {
-        trips.add(trip)
-    }
-
-    override fun editTrip(trip: Trip) {
-        val index = trips.indexOfFirst { it.id == trip.id }
-        if (index != -1) trips[index] = trip
-    }
-
-    override fun deleteTrip(tripId: String) {
-        trips.removeIf { it.id == tripId }
-    }
-}
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TripListViewModelTest {
@@ -47,21 +25,25 @@ class TripListViewModelTest {
     val instantTaskExecutorRule = InstantTaskExecutorRule()
 
     private lateinit var viewModel: TripViewModel
-    private lateinit var fakeRepository: FakeTripRepository
+    private lateinit var repository: TripRepository
     private val testDispatcher = UnconfinedTestDispatcher()
+    private val tripsFlow = MutableStateFlow<List<Trip>>(emptyList())
 
     @Before
     fun setUp() {
-        // SOLUCIÓN: Mockeamos la clase Log de Android para que no falle en la JVM
+        Dispatchers.setMain(testDispatcher)
+        
+        // Mock Log
         mockkStatic(Log::class)
         every { Log.d(any<String>(), any<String>()) } returns 0
         every { Log.i(any<String>(), any<String>()) } returns 0
         every { Log.e(any<String>(), any<String>()) } returns 0
         every { Log.w(any<String>(), any<String>()) } returns 0
 
-        Dispatchers.setMain(testDispatcher)
-        fakeRepository = FakeTripRepository()
-        viewModel = TripViewModel(fakeRepository)
+        repository = mockk()
+        every { repository.getTrips() } returns tripsFlow
+        
+        viewModel = TripViewModel(repository)
     }
 
     @After
@@ -71,39 +53,38 @@ class TripListViewModelTest {
     }
 
     @Test
-    fun `test addTrip with valid data adds trip to state`() {
+    fun `test addTrip with valid data adds trip via repository`() {
         val trip = Trip(
             title = "Atenas",
             startDate = "01/05/2024",
             endDate = "10/05/2024",
             description = "Viaje cultural"
         )
+        coEvery { repository.addTrip(any()) } just Runs
         
         val result = viewModel.addTrip(trip)
         
         assertTrue(result)
-        assertEquals(1, viewModel.trips.value.size)
-        assertEquals("Atenas", viewModel.trips.value[0].title)
+        coVerify { repository.addTrip(trip) }
     }
 
     @Test
-    fun `test addTrip with empty title (implicit validation via dates in this VM)`() {
+    fun `test addTrip with empty title triggers error`() {
         val trip = Trip(
-            title = "Test",
-            startDate = "",
-            endDate = "",
+            title = "",
+            startDate = "01/05/2024",
+            endDate = "10/05/2024",
             description = "Desc"
         )
         
         val result = viewModel.addTrip(trip)
         
         assertFalse(result)
-        // Ahora comparamos contra el ID del recurso
-        assertEquals(R.string.error_required_dates, viewModel.errorMessageRes.value)
+        assertEquals(R.string.error_field_required, viewModel.errorMessageRes.value)
     }
 
     @Test
-    fun `test addTrip with startDate after endDate triggers error`() {
+    fun `test addTrip with invalid date range triggers error`() {
         val trip = Trip(
             title = "Error Trip",
             startDate = "20/05/2024",
@@ -114,31 +95,28 @@ class TripListViewModelTest {
         val result = viewModel.addTrip(trip)
         
         assertFalse(result)
-        // Ahora comparamos contra el ID del recurso
         assertEquals(R.string.error_invalid_range, viewModel.errorMessageRes.value)
     }
 
     @Test
-    fun `test deleteTrip removes trip from state`() {
-        val trip = Trip(id = "1", title = "T1", startDate = "01/01/2024", endDate = "02/01/2024", description = "D")
-        fakeRepository.addTrip(trip)
-        viewModel.loadTrips()
+    fun `test deleteTrip calls repository`() {
+        val tripId = "1"
+        coEvery { repository.deleteTrip(tripId) } just Runs
         
-        viewModel.deleteTrip("1")
+        viewModel.deleteTrip(tripId)
         
-        assertTrue(viewModel.trips.value.isEmpty())
+        coVerify { repository.deleteTrip(tripId) }
     }
 
     @Test
-    fun `test editTrip reflects changes in state`() {
+    fun `test editTrip calls repository`() {
         val trip = Trip(id = "1", title = "Original", startDate = "01/01/2024", endDate = "02/01/2024", description = "D")
-        fakeRepository.addTrip(trip)
-        viewModel.loadTrips()
+        coEvery { repository.editTrip(any()) } just Runs
         
         val updatedTrip = trip.copy(title = "Actualizado")
         val result = viewModel.editTrip(updatedTrip)
         
         assertTrue(result)
-        assertEquals("Actualizado", viewModel.trips.value[0].title)
+        coVerify { repository.editTrip(updatedTrip) }
     }
 }
