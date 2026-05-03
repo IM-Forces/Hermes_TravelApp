@@ -235,9 +235,9 @@ fun RegisterScreen(
                     )
 
                     if (uiState is AuthUiState.Error) {
-                        val errorCode = (uiState as AuthUiState.Error).errorCode
-                        val errorMessage = when (errorCode) {
-                            "ERROR_INVALID_EMAIL",
+                        val errorState = uiState as AuthUiState.Error
+                        val errorMessage = when (errorState.errorCode) {
+                            "ERROR_INVALID_EMAIL" -> stringResource(R.string.error_email_invalid)
                             "ERROR_WRONG_PASSWORD",
                             "ERROR_INVALID_CREDENTIAL" -> stringResource(R.string.error_auth_invalid_credentials)
 
@@ -249,7 +249,7 @@ fun RegisterScreen(
                             "ERROR_TOO_MANY_REQUESTS" -> stringResource(R.string.error_auth_too_many_requests)
 
                             "ERROR_EMPTY_FIELDS" -> stringResource(R.string.error_auth_empty_fields)
-
+                            "ERROR_EMPTY_EMAIL" -> stringResource(R.string.error_email_required)
                             "ERROR_EMPTY_USERNAME" -> stringResource(R.string.error_username_required)
                             "ERROR_WEAK_PASSWORD" -> stringResource(R.string.error_password_length)
                             "ERROR_EMPTY_PASSWORD" -> stringResource(R.string.error_password_required)
@@ -258,7 +258,7 @@ fun RegisterScreen(
                             "ERROR_USERNAME_TAKEN" -> stringResource(R.string.error_username_taken)
                             "ERROR_EMAIL_ALREADY_IN_USE" -> stringResource(R.string.error_email_already_in_use)
 
-                            else -> stringResource(R.string.error_auth_unknown)
+                            else -> stringResource(errorState.message)
                         }
 
                         Text(
