@@ -74,5 +74,5 @@ interface HotelApiService {
     @DELETE("reservations/{res_id}")
     suspend fun deleteReservation(
         @Path("res_id") reservationId: String
-    )
+    ): ReservationDto
 }

@@ -71,6 +71,7 @@ class HotelRepositoryImpl @Inject constructor(
     override suspend fun deleteReservation(reservationId: String): Result<Unit> {
         return runCatching {
             apiService.deleteReservation(reservationId)
+            Unit
         }
     }
 }
