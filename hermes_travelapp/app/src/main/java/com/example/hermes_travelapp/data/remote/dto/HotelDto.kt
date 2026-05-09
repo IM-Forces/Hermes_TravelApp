@@ -3,6 +3,18 @@ package com.example.hermes_travelapp.data.remote.dto
 import com.google.gson.annotations.SerializedName
 
 /**
+ * Respuesta envoltorio para la creación de una reserva.
+ */
+data class ReserveResponseDto(
+    @SerializedName("message")
+    val message: String,
+    @SerializedName("nights")
+    val nights: Int,
+    @SerializedName("reservation")
+    val reservation: ReservationDto
+)
+
+/**
  * Envoltorio para la respuesta de la lista de reservas.
  */
 data class ReservationListDto(
@@ -25,7 +37,7 @@ data class HotelDto(
     @SerializedName("image_url")
     val imageUrl: String,
     @SerializedName("rooms")
-    val rooms: List<RoomDto>? = null
+    val rooms: List<RoomDto> = emptyList()
 )
 
 /**
@@ -43,7 +55,8 @@ data class RoomDto(
 )
 
 /**
- * DTO de una Reserva, incluyendo hotel y habitación anidados.
+ * DTO de una Reserva.
+ * Los campos 'hotel' y 'room' son opcionales porque el POST no los devuelve.
  */
 data class ReservationDto(
     @SerializedName("id")
@@ -61,9 +74,9 @@ data class ReservationDto(
     @SerializedName("guest_email")
     val guestEmail: String,
     @SerializedName("hotel")
-    val hotel: HotelDto,
+    val hotel: HotelDto? = null,
     @SerializedName("room")
-    val room: RoomDto
+    val room: RoomDto? = null
 )
 
 /**

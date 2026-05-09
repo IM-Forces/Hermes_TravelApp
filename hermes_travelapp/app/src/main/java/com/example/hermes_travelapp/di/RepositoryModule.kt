@@ -3,12 +3,14 @@ package com.example.hermes_travelapp.di
 import com.example.hermes_travelapp.data.repository.AccessLogRepositoryImpl
 import com.example.hermes_travelapp.data.repository.ActivityRepositoryImpl
 import com.example.hermes_travelapp.data.repository.AuthRepositoryImpl
+import com.example.hermes_travelapp.data.repository.HotelRepositoryImpl
 import com.example.hermes_travelapp.data.repository.TripDayRepositoryImpl
 import com.example.hermes_travelapp.data.repository.TripRepositoryImpl
 import com.example.hermes_travelapp.data.repository.UserRepositoryImpl
 import com.example.hermes_travelapp.domain.repository.AccessLogRepository
 import com.example.hermes_travelapp.domain.repository.ActivityRepository
 import com.example.hermes_travelapp.domain.repository.AuthRepository
+import com.example.hermes_travelapp.domain.repository.HotelRepository
 import com.example.hermes_travelapp.domain.repository.TripDayRepository
 import com.example.hermes_travelapp.domain.repository.TripRepository
 import com.example.hermes_travelapp.domain.repository.UserRepository
@@ -57,4 +59,10 @@ abstract class RepositoryModule {
     abstract fun bindAccessLogRepository(
         accessLogRepositoryImpl: AccessLogRepositoryImpl
     ): AccessLogRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindHotelRepository(
+        hotelRepositoryImpl: HotelRepositoryImpl
+    ): HotelRepository
 }

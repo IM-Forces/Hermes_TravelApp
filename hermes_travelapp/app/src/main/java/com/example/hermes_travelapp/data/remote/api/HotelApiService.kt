@@ -1,10 +1,10 @@
 package com.example.hermes_travelapp.data.remote.api
 
-import com.example.hermes_travelapp.data.remote.dto.CancelRequestDto
 import com.example.hermes_travelapp.data.remote.dto.HotelDto
 import com.example.hermes_travelapp.data.remote.dto.ReservationDto
 import com.example.hermes_travelapp.data.remote.dto.ReservationListDto
 import com.example.hermes_travelapp.data.remote.dto.ReserveRequestDto
+import com.example.hermes_travelapp.data.remote.dto.ReserveResponseDto
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -29,7 +29,7 @@ interface HotelApiService {
     suspend fun reserveRoom(
         @Path("group_id") groupId: String = "G03",
         @Body request: ReserveRequestDto
-    )
+    ): ReserveResponseDto
 
     /**
      * Checks hotel availability.
@@ -42,17 +42,7 @@ interface HotelApiService {
         @Query("hotel_id") hotelId: String? = null,
         @Query("start_date") startDate: String,
         @Query("end_date") endDate: String
-    )
-
-    /**
-     * Cancels a reservation via group endpoint.
-     * POST /hotels/{group_id}/cancel
-     */
-    @POST("hotels/{group_id}/cancel")
-    suspend fun cancelReservationByGroup(
-        @Path("group_id") groupId: String = "G03",
-        @Body request: ReserveRequestDto
-    )
+    ): List<HotelDto>
 
     /**
      * Lists all reservations for the given group.
@@ -61,14 +51,14 @@ interface HotelApiService {
     suspend fun getGroupReservations(
         @Path("group_id") groupId: String = "G03",
         @Query("guest_email") guestEmail: String? = null
-    )
+    ): ReservationListDto
 
     /**
      * Lists all reservations across all groups.
      * GET /reservations
      */
     @GET("reservations")
-    suspend fun getAllReservations()
+    suspend fun getAllReservations(): ReservationListDto
 
     /**
      * Gets a single reservation by its ID.
@@ -76,7 +66,7 @@ interface HotelApiService {
     @GET("reservations/{res_id}")
     suspend fun getReservationById(
         @Path("res_id") reservationId: String
-    )
+    ): ReservationDto
 
     /**
      * Cancels/deletes a reservation by its ID.
