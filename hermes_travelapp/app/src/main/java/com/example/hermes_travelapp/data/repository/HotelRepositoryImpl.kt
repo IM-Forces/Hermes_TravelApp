@@ -56,12 +56,6 @@ class HotelRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getAllReservations(): Result<List<HotelReservation>> {
-        return runCatching {
-            apiService.getAllReservations().reservations.map { it.toDomain() }
-        }
-    }
-
     override suspend fun getReservationById(reservationId: String): Result<HotelReservation> {
         return runCatching {
             apiService.getReservationById(reservationId).toDomain()

@@ -96,8 +96,3 @@ data class ReserveRequestDto(
     @SerializedName("guest_email")
     val guestEmail: String
 )
-
-data class CancelRequestDto(
-    @SerializedName("reservation_id")
-    val reservationId: String
-)

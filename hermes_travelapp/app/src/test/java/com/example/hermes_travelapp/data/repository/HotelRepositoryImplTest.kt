@@ -39,8 +39,8 @@ class HotelRepositoryImplTest {
         val mockHotelsDto = listOf(
             HotelDto("H1", "Hotel Available", "Address", 4, "url", emptyList())
         )
-        coEvery { 
-            apiService.checkAvailability("G03", any(), any(), "2026-05-20", "2026-05-22") 
+        coEvery {
+            apiService.checkAvailability("G03", any(), any(), "2026-05-20", "2026-05-22")
         } returns mockHotelsDto
 
         val result = repository.checkAvailability("G03", "BCN", "H1", "2026-05-20", "2026-05-22")
@@ -61,7 +61,7 @@ class HotelRepositoryImplTest {
             nights = 2,
             reservation = reservationDto
         )
-        
+
         coEvery { apiService.reserveRoom(any(), any()) } returns mockResponse
 
         val result = repository.reserveRoom(
@@ -73,6 +73,20 @@ class HotelRepositoryImplTest {
         assertTrue(result.isSuccess)
         assertEquals("R1", result.getOrNull()?.id)
         assertEquals("Ivan Gil", result.getOrNull()?.guestName)
+    }
+
+    @Test
+    fun `reserveRoom returns failure when API throws exception`() = runBlocking {
+        coEvery { apiService.reserveRoom(any(), any()) } throws Exception("Network Error")
+
+        val result = repository.reserveRoom(
+            groupId = "G03", hotelId = "H1", roomId = "RM1",
+            startDate = "2026-05-20", endDate = "2026-05-22",
+            guestName = "Ivan Gil", guestEmail = "ivan@example.com"
+        )
+
+        assertTrue(result.isFailure)
+        assertEquals("Network Error", result.exceptionOrNull()?.message)
     }
 
     @Test
@@ -97,6 +111,42 @@ class HotelRepositoryImplTest {
         val result = repository.deleteReservation("R1")
 
         assertTrue(result.isSuccess)
+    }
+
+    @Test
+    fun `deleteReservation returns failure when API throws exception`() = runBlocking {
+        coEvery { apiService.deleteReservation("R1") } throws Exception("Not Found")
+
+        val result = repository.deleteReservation("R1")
+
+        assertTrue(result.isFailure)
+        assertEquals("Not Found", result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `getReservationById returns success and maps correctly`() = runBlocking {
+        val reservationDto = ReservationDto(
+            id = "AOBUJB", hotelId = "BCN01", roomId = "R1",
+            startDate = "2026-05-20", endDate = "2026-05-22",
+            guestName = "Ivan Gil", guestEmail = "ivan@example.com"
+        )
+        coEvery { apiService.getReservationById("AOBUJB") } returns reservationDto
+
+        val result = repository.getReservationById("AOBUJB")
+
+        assertTrue(result.isSuccess)
+        assertEquals("AOBUJB", result.getOrNull()?.id)
+        assertEquals("BCN01", result.getOrNull()?.hotelId)
+    }
+
+    @Test
+    fun `getReservationById returns failure when API throws exception`() = runBlocking {
+        coEvery { apiService.getReservationById("INVALID") } throws Exception("Reservation not found")
+
+        val result = repository.getReservationById("INVALID")
+
+        assertTrue(result.isFailure)
+        assertEquals("Reservation not found", result.exceptionOrNull()?.message)
     }
 
     @Test

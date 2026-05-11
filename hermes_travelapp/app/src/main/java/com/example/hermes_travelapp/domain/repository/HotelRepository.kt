@@ -29,8 +29,6 @@ interface HotelRepository {
         guestEmail: String? = null
     ): Result<List<HotelReservation>>
 
-    suspend fun getAllReservations(): Result<List<HotelReservation>>
-
     suspend fun getReservationById(reservationId: String): Result<HotelReservation>
 
     suspend fun deleteReservation(reservationId: String): Result<Unit>

@@ -54,13 +54,6 @@ interface HotelApiService {
     ): ReservationListDto
 
     /**
-     * Lists all reservations across all groups.
-     * GET /reservations
-     */
-    @GET("reservations")
-    suspend fun getAllReservations(): ReservationListDto
-
-    /**
      * Gets a single reservation by its ID.
      */
     @GET("reservations/{res_id}")
