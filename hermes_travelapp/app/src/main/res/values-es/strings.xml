@@ -220,4 +220,15 @@
     <string name="forgot_password_success">¡Correo enviado! Revisa tu bandeja de entrada.</string>
     <string name="forgot_password_back_to_login">Volver al inicio de sesión</string>
     <string name="error_forgot_password_failed">No se pudo enviar el correo. Por favor inténtalo de nuevo.</string>
+
+    <!-- Hotel Search -->
+    <string name="hotel_search_title">Buscar Hoteles</string>
+    <string name="hotel_search_city">Ciudad</string>
+    <string name="hotel_search_start_date">Fecha de entrada</string>
+    <string name="hotel_search_end_date">Fecha de salida</string>
+    <string name="hotel_search_button">Buscar Hoteles</string>
+    <string name="hotel_results_title">Hoteles Disponibles</string>
+    <string name="hotel_no_results">No se encontraron hoteles disponibles.</string>
+    <string name="hotel_rating">Puntuación: %1$d/5</string>
+    <string name="hotel_price_from">Desde €%1$.2f</string>
 </resources>

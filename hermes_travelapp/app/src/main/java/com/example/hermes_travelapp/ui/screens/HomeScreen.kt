@@ -72,7 +72,8 @@ fun HomeScreen(
     items: List<RecommendationItem>? = null,
     favorites: List<RecommendationItem> = emptyList(),
     onToggleFavorite: (RecommendationItem) -> Unit = {},
-    accountViewModel: AccountViewModel = viewModel()
+    accountViewModel: AccountViewModel = viewModel(),
+    onSearchHotelsClick: () -> Unit = {}
 ) {
     val username by accountViewModel.username.collectAsState()
 
@@ -80,7 +81,8 @@ fun HomeScreen(
         username = username,
         items = items,
         favorites = favorites,
-        onToggleFavorite = onToggleFavorite
+        onToggleFavorite = onToggleFavorite,
+        onSearchHotelsClick = onSearchHotelsClick
     )
 }
 
@@ -90,7 +92,8 @@ fun HomeScreenContent(
     username: String,
     items: List<RecommendationItem>? = null,
     favorites: List<RecommendationItem> = emptyList(),
-    onToggleFavorite: (RecommendationItem) -> Unit = {}
+    onToggleFavorite: (RecommendationItem) -> Unit = {},
+    onSearchHotelsClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val recommendations = remember(items) { items ?: loadRecommendationsFromAssets(context) }
@@ -115,6 +118,10 @@ fun HomeScreenContent(
                 )
             }
 
+            item {
+                HotelSearchPromotionCard(onClick = onSearchHotelsClick)
+            }
+
             if (recommendations.isEmpty()) {
                 item {
                     Box(modifier = Modifier.fillParentMaxHeight(0.7f), contentAlignment = Alignment.Center) {
@@ -136,6 +143,42 @@ fun HomeScreenContent(
                 }
             }
             item { Spacer(modifier = Modifier.height(16.dp)) }
+        }
+    }
+}
+
+@Composable
+fun HotelSearchPromotionCard(onClick: () -> Unit) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.hotel_search_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Text(
+                    text = "Encuentra el alojamiento perfecto para tu viaje",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                )
+            }
+            Icon(
+                imageVector = Icons.Default.LocationOn,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(32.dp)
+            )
         }
     }
 }

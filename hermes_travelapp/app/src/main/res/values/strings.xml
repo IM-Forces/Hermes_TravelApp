@@ -221,4 +221,15 @@
     <string name="forgot_password_success">Reset email sent! Check your inbox.</string>
     <string name="forgot_password_back_to_login">Back to Login</string>
     <string name="error_forgot_password_failed">Failed to send reset email. Please try again.</string>
+
+    <!-- Hotel Search -->
+    <string name="hotel_search_title">Search Hotels</string>
+    <string name="hotel_search_city">City</string>
+    <string name="hotel_search_start_date">Check-in Date</string>
+    <string name="hotel_search_end_date">Check-out Date</string>
+    <string name="hotel_search_button">Search Hotels</string>
+    <string name="hotel_results_title">Available Hotels</string>
+    <string name="hotel_no_results">No available hotels found.</string>
+    <string name="hotel_rating">Rating: %1$d/5</string>
+    <string name="hotel_price_from">From €%1$.2f</string>
 </resources>

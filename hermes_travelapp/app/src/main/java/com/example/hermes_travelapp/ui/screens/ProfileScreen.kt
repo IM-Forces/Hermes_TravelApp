@@ -41,6 +41,7 @@ fun ProfileScreen(
     onNavigateToAbout: () -> Unit = {},
     onNavigateToPreferences: () -> Unit = {},
     onNavigateToTerms: () -> Unit = {},
+    onNavigateToHotelSearch: () -> Unit = {},
     onLogout: () -> Unit = {},
     accountViewModel: AccountViewModel = viewModel(),
     tripViewModel: TripViewModel = viewModel()
@@ -57,6 +58,7 @@ fun ProfileScreen(
         onNavigateToAbout = onNavigateToAbout,
         onNavigateToPreferences = onNavigateToPreferences,
         onNavigateToTerms = onNavigateToTerms,
+        onNavigateToHotelSearch = onNavigateToHotelSearch,
         onLogout = onLogout
     )
 }
@@ -70,6 +72,7 @@ fun ProfileScreenContent(
     onNavigateToAbout: () -> Unit = {},
     onNavigateToPreferences: () -> Unit = {},
     onNavigateToTerms: () -> Unit = {},
+    onNavigateToHotelSearch: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -161,6 +164,12 @@ fun ProfileScreenContent(
                     title = stringResource(R.string.prefs_title),
                     icon = Icons.Default.Settings,
                     onClick = onNavigateToPreferences
+                )
+
+                ProfileOptionItem(
+                    title = stringResource(R.string.hotel_search_title),
+                    icon = Icons.Default.TravelExplore,
+                    onClick = onNavigateToHotelSearch
                 )
                 
                 Text(
