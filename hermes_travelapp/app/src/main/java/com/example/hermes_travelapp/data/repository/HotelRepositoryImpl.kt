@@ -1,5 +1,6 @@
 package com.example.hermes_travelapp.data.repository
 
+import android.util.Log
 import com.example.hermes_travelapp.data.remote.api.HotelApiService
 import com.example.hermes_travelapp.data.remote.dto.ReserveRequestDto
 import com.example.hermes_travelapp.data.remote.mapper.toDomain
@@ -16,7 +17,7 @@ class HotelRepositoryImpl @Inject constructor(
 
     override suspend fun getHotels(groupId: String): Result<List<Hotel>> {
         return runCatching {
-            apiService.getHotels(groupId).map { it.toDomain() }
+            apiService.getHotels(groupId).hotels?.map { it.toDomain() } ?: emptyList()
         }
     }
 
@@ -27,8 +28,13 @@ class HotelRepositoryImpl @Inject constructor(
         startDate: String,
         endDate: String
     ): Result<List<Hotel>> {
+        Log.d("HotelRepository", "checkAvailability params: groupId=$groupId, city=$city, hotelId=$hotelId, start=$startDate, end=$endDate")
         return runCatching {
-            apiService.checkAvailability(groupId, city, hotelId, startDate, endDate).map { it.toDomain() }
+            val response = apiService.checkAvailability(groupId, city, hotelId, startDate, endDate)
+            Log.d("HotelRepository", "API Response: $response")
+            response.availableHotels?.map { it.toDomain() } ?: emptyList()
+        }.onFailure { e ->
+            Log.e("HotelRepository", "Error in checkAvailability: ${e.message}", e)
         }
     }
 

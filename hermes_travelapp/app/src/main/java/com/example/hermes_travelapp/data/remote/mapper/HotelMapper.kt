@@ -9,21 +9,21 @@ import com.example.hermes_travelapp.domain.model.HotelRoom
 
 fun HotelDto.toDomain(): Hotel {
     return Hotel(
-        id = id,
-        name = name,
-        address = address,
-        rating = rating,
-        imageUrl = imageUrl,
-        rooms = rooms.map { it.toDomain() }
+        id = id ?: "",
+        name = name ?: "Hotel sin nombre",
+        address = address ?: "Dirección no disponible",
+        rating = rating ?: 0,
+        imageUrl = imageUrl ?: "",
+        rooms = rooms?.map { it.toDomain() } ?: emptyList()
     )
 }
 
 fun RoomDto.toDomain(): HotelRoom {
     return HotelRoom(
-        id = id,
-        roomType = roomType,
-        price = price,
-        images = images
+        id = id ?: "",
+        roomType = roomType ?: "Estándar",
+        price = price ?: 0.0,
+        images = images ?: emptyList()
     )
 }
 

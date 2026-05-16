@@ -4,6 +4,7 @@
     <!-- Navigation -->
     <string name="nav_home">Inicio</string>
     <string name="nav_explore">Explorar</string>
+    <string name="nav_hotels">Hoteles</string>
     <string name="nav_trips">Viajes</string>
     <string name="nav_favorites">Favoritos</string>
     <string name="nav_profile">Perfil</string>
@@ -227,6 +228,8 @@
     <string name="hotel_search_start_date">Fecha de entrada</string>
     <string name="hotel_search_end_date">Fecha de salida</string>
     <string name="hotel_search_button">Buscar Hoteles</string>
+    <string name="hotel_search_max_price">Precio máximo: %1$d€</string>
+    <string name="hotel_search_stars">Categoría (estrellas):</string>
     <string name="hotel_results_title">Hoteles Disponibles</string>
     <string name="hotel_no_results">No se encontraron hoteles disponibles.</string>
     <string name="hotel_rating">Puntuación: %1$d/5</string>

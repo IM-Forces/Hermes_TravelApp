@@ -1,6 +1,8 @@
 package com.example.hermes_travelapp.data.remote.api
 
+import com.example.hermes_travelapp.data.remote.dto.AvailabilityResponseDto
 import com.example.hermes_travelapp.data.remote.dto.HotelDto
+import com.example.hermes_travelapp.data.remote.dto.HotelListDto
 import com.example.hermes_travelapp.data.remote.dto.ReservationDto
 import com.example.hermes_travelapp.data.remote.dto.ReservationListDto
 import com.example.hermes_travelapp.data.remote.dto.ReserveRequestDto
@@ -20,7 +22,7 @@ interface HotelApiService {
     @GET("hotels/{group_id}/hotels")
     suspend fun getHotels(
         @Path("group_id") groupId: String = "G03"
-    ): List<HotelDto>
+    ): HotelListDto
 
     /**
      * Reserves a room.
@@ -42,7 +44,7 @@ interface HotelApiService {
         @Query("hotel_id") hotelId: String? = null,
         @Query("start_date") startDate: String,
         @Query("end_date") endDate: String
-    ): List<HotelDto>
+    ): AvailabilityResponseDto
 
     /**
      * Lists all reservations for the given group.

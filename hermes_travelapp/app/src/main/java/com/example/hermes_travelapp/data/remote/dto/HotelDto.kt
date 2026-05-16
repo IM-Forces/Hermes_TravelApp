@@ -15,6 +15,22 @@ data class ReserveResponseDto(
 )
 
 /**
+ * Envoltorio para la respuesta de la lista de hoteles.
+ */
+data class HotelListDto(
+    @SerializedName("hotels")
+    val hotels: List<HotelDto>? = null
+)
+
+/**
+ * Envoltorio para la respuesta de disponibilidad de hoteles.
+ */
+data class AvailabilityResponseDto(
+    @SerializedName("available_hotels")
+    val availableHotels: List<HotelDto>? = null
+)
+
+/**
  * Envoltorio para la respuesta de la lista de reservas.
  */
 data class ReservationListDto(
@@ -27,17 +43,17 @@ data class ReservationListDto(
  */
 data class HotelDto(
     @SerializedName("id")
-    val id: String,
+    val id: String?,
     @SerializedName("name")
-    val name: String,
+    val name: String?,
     @SerializedName("address")
-    val address: String,
+    val address: String?,
     @SerializedName("rating")
-    val rating: Int,
+    val rating: Int?,
     @SerializedName("image_url")
-    val imageUrl: String,
+    val imageUrl: String?,
     @SerializedName("rooms")
-    val rooms: List<RoomDto> = emptyList()
+    val rooms: List<RoomDto>? = emptyList()
 )
 
 /**
@@ -45,13 +61,13 @@ data class HotelDto(
  */
 data class RoomDto(
     @SerializedName("id")
-    val id: String,
+    val id: String?,
     @SerializedName("room_type")
-    val roomType: String,
+    val roomType: String?,
     @SerializedName("price")
-    val price: Double,
+    val price: Double?,
     @SerializedName("images")
-    val images: List<String>
+    val images: List<String>? = emptyList()
 )
 
 /**

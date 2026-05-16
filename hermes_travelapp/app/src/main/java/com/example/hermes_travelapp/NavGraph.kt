@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Hotel
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Search
@@ -32,7 +33,7 @@ import com.example.hermes_travelapp.ui.viewmodels.*
 
 sealed class BottomNavItem(val route: String, val icon: ImageVector, val labelRes: Int) {
     object Home : BottomNavItem("home", Icons.Default.Home, R.string.nav_home)
-    object Explore : BottomNavItem("explore", Icons.Default.Search, R.string.nav_explore)
+    object Explore : BottomNavItem("explore", Icons.Default.Hotel, R.string.nav_hotels)
     object Trips : BottomNavItem("trips", Icons.Default.Place, R.string.nav_trips)
     object Favorites : BottomNavItem("favorites", Icons.Default.Favorite, R.string.nav_favorites)
     object Profile : BottomNavItem("profile", Icons.Default.Person, R.string.nav_profile)
@@ -118,9 +119,6 @@ fun NavGraph(
                 },
                 onTripClick = { trip ->
                     navController.navigate("tripOverview/${trip.id}")
-                },
-                onSearchHotels = {
-                    navController.navigate("hotelSearch")
                 },
                 favoritePlaces = favoritePlaces,
                 onToggleFavorite = { item ->
@@ -209,30 +207,28 @@ fun NavGraph(
             ) 
         }
 
-        composable("hotelSearch") {
-            val hotelSearchViewModel: HotelSearchViewModel = hiltViewModel()
-            HotelSearchScreen(
-                viewModel = hotelSearchViewModel,
-                onBack = { navController.popBackStack() },
-                onNavigateToResults = {
-                    val city = hotelSearchViewModel.city.value
-                    val start = hotelSearchViewModel.startDate.value.replace("/", "-")
-                    val end = hotelSearchViewModel.endDate.value.replace("/", "-")
-                    navController.navigate("hotelResults/$city/$start/$end")
-                }
-            )
-        }
-
         composable("hotelResults/{city}/{start}/{end}") { backStackEntry ->
             val city = backStackEntry.arguments?.getString("city") ?: ""
             val start = backStackEntry.arguments?.getString("start")?.replace("-", "/") ?: ""
             val end = backStackEntry.arguments?.getString("end")?.replace("-", "/") ?: ""
             
-            HotelListScreen(
+            // Get the ViewModel shared with MainScreen to see results
+            val mainEntry = remember(backStackEntry) {
+                navController.getBackStackEntry("main")
+            }
+            val hotelSearchViewModel: HotelSearchViewModel = hiltViewModel(mainEntry)
+            
+            val username by accountViewModel.username.collectAsState()
+
+            HotelResultsScreen(
                 city = city,
                 startDate = start,
                 endDate = end,
-                onBack = { navController.popBackStack() }
+                viewModel = hotelSearchViewModel,
+                onBack = { navController.popBackStack() },
+                onHotelClick = { hotel ->
+                    // Handle hotel click
+                }
             )
         }
     }
@@ -248,7 +244,6 @@ fun MainScreen(
     onEditTrip: (Trip) -> Unit,
     onCreateTrip: () -> Unit,
     onTripClick: (Trip) -> Unit,
-    onSearchHotels: () -> Unit,
     favoritePlaces: List<RecommendationItem>,
     onToggleFavorite: (RecommendationItem) -> Unit
 ) {
@@ -316,10 +311,35 @@ fun MainScreen(
                     onToggleFavorite = onToggleFavorite,
                     favorites = favoritePlaces,
                     accountViewModel = accountViewModel,
-                    onSearchHotelsClick = onSearchHotels
+                    onSearchHotelsClick = {
+                        navController.navigate(BottomNavItem.Explore.route) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 ) 
             }
-            composable(BottomNavItem.Explore.route) { ExploreScreen() }
+            composable(BottomNavItem.Explore.route) { backStackEntry ->
+                // Use ViewModel scoped to "main" (the parent route)
+                val mainEntry = remember(backStackEntry) {
+                    rootNavController.getBackStackEntry("main")
+                }
+                val hotelSearchViewModel: HotelSearchViewModel = hiltViewModel(mainEntry)
+                
+                val username by accountViewModel.username.collectAsState()
+                HotelSearchScreen(
+                    viewModel = hotelSearchViewModel,
+                    onNavigateToResults = {
+                        val city = hotelSearchViewModel.city.value
+                        val start = hotelSearchViewModel.startDate.value.replace("/", "-")
+                        val end = hotelSearchViewModel.endDate.value.replace("/", "-")
+                        rootNavController.navigate("hotelResults/$city/$start/$end")
+                    },
+                    showBack = false,
+                    username = username
+                )
+            }
             composable(BottomNavItem.Trips.route) { 
                 val username by accountViewModel.username.collectAsState()
                 TripsScreen(
@@ -344,7 +364,13 @@ fun MainScreen(
                     onNavigateToAbout = { rootNavController.navigate("about") },
                     onNavigateToPreferences = { rootNavController.navigate("preferences") },
                     onNavigateToTerms = { rootNavController.navigate("terms") },
-                    onNavigateToHotelSearch = { rootNavController.navigate("hotelSearch") },
+                    onNavigateToHotelSearch = {
+                        navController.navigate(BottomNavItem.Explore.route) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                     onLogout = {
                         authViewModel.signOut()
                         rootNavController.navigate("login") {

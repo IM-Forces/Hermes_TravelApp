@@ -4,6 +4,7 @@
     <!-- Navigation -->
     <string name="nav_home">Home</string>
     <string name="nav_explore">Explore</string>
+    <string name="nav_hotels">Hotels</string>
     <string name="nav_trips">Trips</string>
     <string name="nav_favorites">Favorites</string>
     <string name="nav_profile">Profile</string>
@@ -228,6 +229,8 @@
     <string name="hotel_search_start_date">Check-in Date</string>
     <string name="hotel_search_end_date">Check-out Date</string>
     <string name="hotel_search_button">Search Hotels</string>
+    <string name="hotel_search_max_price">Max Price: %1$d€</string>
+    <string name="hotel_search_stars">Category (stars):</string>
     <string name="hotel_results_title">Available Hotels</string>
     <string name="hotel_no_results">No available hotels found.</string>
     <string name="hotel_rating">Rating: %1$d/5</string>

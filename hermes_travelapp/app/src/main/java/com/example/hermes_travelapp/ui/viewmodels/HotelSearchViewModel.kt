@@ -42,6 +42,12 @@ class HotelSearchViewModel @Inject constructor(
     private val _endDateError = MutableStateFlow<String?>(null)
     val endDateError: StateFlow<String?> = _endDateError.asStateFlow()
 
+    private val _maxPrice = MutableStateFlow(500f)
+    val maxPrice: StateFlow<Float> = _maxPrice.asStateFlow()
+
+    private val _stars = MutableStateFlow(0)
+    val stars: StateFlow<Int> = _stars.asStateFlow()
+
     private val _searchResults = MutableStateFlow<List<Hotel>>(emptyList())
     val searchResults: StateFlow<List<Hotel>> = _searchResults.asStateFlow()
 
@@ -61,6 +67,14 @@ class HotelSearchViewModel @Inject constructor(
         _endDateError.value = null
     }
 
+    fun onMaxPriceChanged(price: Float) {
+        _maxPrice.value = price
+    }
+
+    fun onStarsChanged(stars: Int) {
+        _stars.value = stars
+    }
+
     fun searchHotels(onSuccess: () -> Unit = {}) {
         val currentCity = _city.value
         val start = _startDate.value
@@ -71,12 +85,16 @@ class HotelSearchViewModel @Inject constructor(
         _isLoading.value = true
         _error.value = null
 
+        // Convert dd/MM/yyyy to yyyy-MM-dd for the API
+        val apiStartDate = convertDateFormat(start)
+        val apiEndDate = convertDateFormat(end)
+
         viewModelScope.launch {
             repository.checkAvailability(
                 groupId = "G03",
                 city = currentCity,
-                startDate = start,
-                endDate = end
+                startDate = apiStartDate,
+                endDate = apiEndDate
             ).onSuccess { hotels ->
                 _searchResults.value = hotels
                 _isLoading.value = false
@@ -85,6 +103,17 @@ class HotelSearchViewModel @Inject constructor(
                 _error.value = e.message ?: "Error al buscar hoteles"
                 _isLoading.value = false
             }
+        }
+    }
+
+    private fun convertDateFormat(date: String): String {
+        return try {
+            val inputSdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            val outputSdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val dateObj = inputSdf.parse(date)
+            if (dateObj != null) outputSdf.format(dateObj) else date
+        } catch (e: Exception) {
+            date
         }
     }
 

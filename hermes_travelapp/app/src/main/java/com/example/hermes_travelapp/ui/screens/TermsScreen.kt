@@ -38,7 +38,7 @@ fun TermsScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.secondary,
-                    titleContentColor = BlancoMarmol
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
         },

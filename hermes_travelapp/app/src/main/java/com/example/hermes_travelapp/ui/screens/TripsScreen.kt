@@ -68,19 +68,12 @@ fun TripsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Column {
-                            Text(
-                                text = stringResource(R.string.trips_title),
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSecondary
-                            )
-                            Text(
-                                text = if (trips.isEmpty()) stringResource(R.string.trips_empty) else stringResource(R.string.profile_trips_active, trips.size),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.7f)
-                            )
-                        }
+                        Text(
+                            text = stringResource(R.string.trips_title),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSecondary
+                        )
                         
                         Box(
                             modifier = Modifier

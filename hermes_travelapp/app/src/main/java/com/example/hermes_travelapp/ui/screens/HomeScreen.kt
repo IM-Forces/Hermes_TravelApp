@@ -10,10 +10,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -96,53 +98,103 @@ fun HomeScreenContent(
     onSearchHotelsClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val recommendations = remember(items) { items ?: loadRecommendationsFromAssets(context) }
-
-    Scaffold(
-        topBar = { HomeTopBar(username = username) },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(16.dp)
-        ) {
-            item {
-                Text(
-                    text = stringResource(R.string.home_title),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+    val allRecommendations = remember(items) { items ?: loadRecommendationsFromAssets(context) }
+    
+    var searchQuery by remember { mutableStateOf("") }
+    
+    val filteredRecommendations = remember(searchQuery, allRecommendations) {
+        if (searchQuery.isBlank()) {
+            allRecommendations
+        } else {
+            allRecommendations.filter { item ->
+                item.lugar.contains(searchQuery, ignoreCase = true) ||
+                item.pais.contains(searchQuery, ignoreCase = true) ||
+                item.ciudadRegion.contains(searchQuery, ignoreCase = true) ||
+                item.tipo.contains(searchQuery, ignoreCase = true)
             }
+        }
+    }
 
-            item {
-                HotelSearchPromotionCard(onClick = onSearchHotelsClick)
-            }
-
-            if (recommendations.isEmpty()) {
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            HomeTopBar(username = username)
+            
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(16.dp)
+            ) {
                 item {
-                    Box(modifier = Modifier.fillParentMaxHeight(0.7f), contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            CircularProgressIndicator()
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(stringResource(R.string.home_loading))
-                        }
-                    }
-                }
-            } else {
-                items(recommendations) { item ->
-                    val isFavorite = favorites.any { it.lugar == item.lugar }
-                    RecommendationCard(
-                        item = item,
-                        isFavorite = isFavorite,
-                        onToggleFavorite = { onToggleFavorite(item) }
+                    Text(
+                        text = stringResource(R.string.home_title),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
+
+                item {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text(stringResource(R.string.explore_search_placeholder)) },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        trailingIcon = {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { searchQuery = "" }) {
+                                    Icon(Icons.Default.Close, contentDescription = "Clear")
+                                }
+                            }
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                        )
+                    )
+                }
+
+                item {
+                    HotelSearchPromotionCard(onClick = onSearchHotelsClick)
+                }
+
+                if (allRecommendations.isEmpty()) {
+                    item {
+                        Box(modifier = Modifier.fillParentMaxHeight(0.7f), contentAlignment = Alignment.Center) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                CircularProgressIndicator()
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(stringResource(R.string.home_loading))
+                            }
+                        }
+                    }
+                } else if (filteredRecommendations.isEmpty() && searchQuery.isNotEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = stringResource(R.string.explore_no_results, searchQuery),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+                } else {
+                    items(filteredRecommendations) { item ->
+                        val isFavorite = favorites.any { it.lugar == item.lugar }
+                        RecommendationCard(
+                            item = item,
+                            isFavorite = isFavorite,
+                            onToggleFavorite = { onToggleFavorite(item) }
+                        )
+                    }
+                }
+                item { Spacer(modifier = Modifier.height(16.dp)) }
             }
-            item { Spacer(modifier = Modifier.height(16.dp)) }
         }
     }
 }
@@ -265,39 +317,52 @@ fun RecommendationCard(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeTopBar(username: String) {
     val displayFirstName = username.split(" ").firstOrNull() ?: "User"
-    val initials = if (username.length >= 2) username.take(2).uppercase() else username.take(1).uppercase()
+    val initials = if (username.length >= 2) username.take(2).uppercase() else if (username.isNotEmpty()) username.uppercase() else "U"
 
-    MediumTopAppBar(
-        title = {
-            Text(
-                text = stringResource(R.string.home_welcome, displayFirstName),
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-        },
-        actions = {
-            IconButton(onClick = { }) {
-                Icon(Icons.Default.Notifications, null, tint = MaterialTheme.colorScheme.onTertiary, modifier = Modifier.size(28.dp))
-            }
-            Box(
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.secondary
+        ) {
+            Row(
                 modifier = Modifier
-                    .padding(end = 16.dp)
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(initials, color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text(
+                    text = stringResource(R.string.home_welcome, displayFirstName),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondary
+                )
+                
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = initials,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                }
             }
-        },
-        colors = TopAppBarDefaults.mediumTopAppBarColors(containerColor = MaterialTheme.colorScheme.secondary)
-    )
+        }
+    }
 }
 
 @Preview(name = "Light Mode", showBackground = true)

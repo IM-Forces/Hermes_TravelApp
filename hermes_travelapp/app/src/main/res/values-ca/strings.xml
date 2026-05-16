@@ -4,6 +4,7 @@
     <!-- Navigation -->
     <string name="nav_home">Inici</string>
     <string name="nav_explore">Explorar</string>
+    <string name="nav_hotels">Hotels</string>
     <string name="nav_trips">Viatges</string>
     <string name="nav_favorites">Preferits</string>
     <string name="nav_profile">Perfil</string>
@@ -220,4 +221,17 @@
     <string name="forgot_password_success">Correu enviat! Revisa la teva bústia d\'entrada.</string>
     <string name="forgot_password_back_to_login">Tornar a l\'inici de sessió</string>
     <string name="error_forgot_password_failed">No s\'ha pogut enviar el correu. Si us plau torna-ho a intentar.</string>
+
+    <!-- Hotel Search -->
+    <string name="hotel_search_title">Cercar Hotels</string>
+    <string name="hotel_search_city">Ciutat</string>
+    <string name="hotel_search_start_date">Data d\'entrada</string>
+    <string name="hotel_search_end_date">Data de sortida</string>
+    <string name="hotel_search_button">Cercar Hotels</string>
+    <string name="hotel_search_max_price">Preu màxim: %1$d€</string>
+    <string name="hotel_search_stars">Categoria (estrelles):</string>
+    <string name="hotel_results_title">Hotels Disponibles</string>
+    <string name="hotel_no_results">No s\'han trobat hotels disponibles.</string>
+    <string name="hotel_rating">Puntuació: %1$d/5</string>
+    <string name="hotel_price_from">Des de €%1$.2f</string>
 </resources>
