@@ -8,7 +8,6 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Hotel
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -217,8 +216,6 @@ fun NavGraph(
                 navController.getBackStackEntry("main")
             }
             val hotelSearchViewModel: HotelSearchViewModel = hiltViewModel(mainEntry)
-            
-            val username by accountViewModel.username.collectAsState()
 
             HotelResultsScreen(
                 city = city,

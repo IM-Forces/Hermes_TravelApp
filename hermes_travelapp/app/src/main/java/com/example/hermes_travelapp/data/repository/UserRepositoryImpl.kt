@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.hermes_travelapp.data.database.dao.UserDao
 import com.example.hermes_travelapp.data.database.entities.UserEntity
 import com.example.hermes_travelapp.domain.repository.UserRepository
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -34,6 +35,11 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun getUserById(id: String): UserEntity? {
         Log.d(TAG, "Getting user by ID: $id")
         return userDao.getUserById(id)
+    }
+
+    override fun getUserFlow(id: String): Flow<UserEntity?> {
+        Log.d(TAG, "Watching user by ID: $id")
+        return userDao.getUserFlowById(id)
     }
 
     override suspend fun getUserByEmail(email: String): UserEntity? {

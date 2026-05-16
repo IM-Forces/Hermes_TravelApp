@@ -27,6 +27,12 @@ interface UserDao {
     suspend fun getUserById(id: String): UserEntity?
 
     /**
+     * Observes a user by their unique identifier.
+     */
+    @Query("SELECT * FROM users WHERE id = :id")
+    fun getUserFlowById(id: String): Flow<UserEntity?>
+
+    /**
      * Retrieves a user by their contact email.
      */
     @Query("SELECT * FROM users WHERE email = :email")
